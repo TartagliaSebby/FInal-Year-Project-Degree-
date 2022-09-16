@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> ExpressWay WMS Manager side</title> 
+    <meta Charset ="utf-8">
+
+    <!--libraries-->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
+    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
+    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <!--initialising table-->
+    <script>
+      $(document).ready( function () {
+      $('#deliveryTable').DataTable({select: 'single'});
+      $('#deliveryOrdersTable').DataTable({select: 'single', "searching":false});
+      $('#ordItemsTable').DataTable({select: 'single', "searching":false});
+       } );
+
+      //overlay functions  
+      function openDelOL(){
+        document.getElementById("overlayDelivery").style.width="100%";
+        //TEMP!!!!!!!!!!!!!!!
+        var tab = $('#locationTable').DataTable();
+        tab.row.add([1,2,3,4,5,6,7]).draw(false);
+      }
+      function closeDelOL(){
+        document.getElementById("overlayDelivery").style.width="0";
+        //TEMP!!!!!!!!!!!!!!!!
+        var tab = $('#locationTable').DataTable();
+        tab.clear().draw();
+      }
+      function openOrdItemsOL(){
+        document.getElementById("overlayOrdItems").style.width="100%";
+        //TEMP!!!!!!!!!!!!!!!
+        var tab = $('#locationTable').DataTable();
+        tab.row.add([1,2,3,4,5,6,7]).draw(false);
+      }
+      function closeOrdItemsOL(){
+        document.getElementById("overlayOrdItems").style.width="0";
+        //TEMP!!!!!!!!!!!!!!!!
+        var tab = $('#locationTable').DataTable();
+        tab.clear().draw();
+      }
+    </script>
+
+    <link rel="stylesheet" href="../../static/css/manager_common.css">
+    <style>
+      .overlayContainer{         
+        height: 100%;
+        width: 0;
+        position:fixed;
+        overflow-x: hidden;
+        z-index: 6;
+        top:0;
+        left:0;
+        background-color: rgba(255,255,255,1);
+        transition:0.4s;
+      }
+      .overlayTopBar{
+        display:flex; 
+        align-items:center;
+        border-bottom: solid 1px; 
+        box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
+        min-height:35px; 
+        font-size: 1.25em;
+        font-weight: 700;
+        margin-bottom: 15px;
+      }
+      .delOrderInfoGrid{
+        display:grid;
+        width:98%;
+        min-width:1000px;
+        margin-left:auto;
+        margin-right: auto;  
+        margin-bottom: 80px;
+      }
+    </style>
+</head>
+
+<body style="margin: 0; "> 
+
+   <header class="topBar">
+    <a class="topBarText" style ="left:19px;" href="dashboard.html">ExpressWay</a>
+    <div style="display:flex;">
+      <p  class = "topBarText" style =" right:30px">PLACE HOLDER FOR NAME</p> <!--!!!!!!!!!!!!!!!!!-->
+      <p class="topBarText topBarLogOut">Log Out</p>
+    </div>
+  </header>
+
+  <div>
+    <nav class="sideBar">
+      <p  class="sideBarText"><a href="dashboard.html">Dashboard</a></p>
+      <p class="sideBarText" ><a href="order_page.html">Orders</a></p>
+      <p class="sideBarText" ><a href="inventory_page.html">Inventory</a></p>
+      <p class="sideBarText" ><a href="inbound_shipments_page.html">Inbound Shipments</a></p>
+      <p class="sideBarText" ><a href="receive _discrepancy_page.html">Receive Discrepency</a></p>
+      <p class="sideBarText" ><a href="deliveries_page.html">Deliveries</a></p>
+      <p class="sideBarText" ><a href="job_assignment.html">Job Assignment</a></p>
+      <p class="sideBarText" ><a href="employee_page.html">Employees</a></p>    
+    </nav>
+
+    <div class="contentContainer">
+      <div style="display:flex; flex-direction: column;">
+        <div class="contentTopBar">
+            <p class="contentTopBarText">Deliveries</p>
+        </div>
+      
+        <!--table-->
+        <table id="deliveryTable" class="display">
+          <thead>
+            <th>Order id</th>
+            <th>Delivery id</th>
+            <th>Vehicle Num</th>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+     <!--overlay for delivery-->
+     <div id="overlayDelivery" class="overlayContainer">
+      <div class="overlayTopBar">
+        <span style="position:absolute; left: 20px;">Delivery</span>
+        <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeDelOL()">Back</span>
+      </div>
+      <div class="delOrderInfoGrid">
+        <p style="grid-row-start: 1;">Order id</p>
+        <p style="grid-row-start: 2;">Customer Name</p>
+        <p style="grid-row-start: 3;">Date</p>
+        <p id="orderID" style="grid-row-start: 1; grid-column-start: 2;"></p>
+        <p id="customerName" style="grid-row-start: 2; grid-column-start: 2;"></p>
+        <p id="Date" style="grid-row-start: 3; grid-column-start: 2;"></p>
+      </div>
+      <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items</p>
+      <div style="width:98%; margin-left: auto; margin-right: auto;">
+        <table id="deliveryOrdersTable" class="display">
+          <thead>
+            <th>Delivery id</th>
+            <th>Vehicle Num</th>
+            <th>Departure Time</th>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <!--overlay for order items-->
+     <div id="overlayOrdItems" class="overlayContainer">
+      <div class="overlayTopBar">
+        <span style="position:absolute; left: 20px;">Order Items</span>
+        <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeDelOL()">Back</span>
+      </div>
+      <div class="delOrderInfoGrid">
+        <p style="grid-row-start: 1;">Order id</p>
+        <p style="grid-row-start: 2;">Customer Name</p>
+        <p style="grid-row-start: 3;">Date</p>
+        <p id="orderID" style="grid-row-start: 1; grid-column-start: 2;"></p>
+        <p id="customerName" style="grid-row-start: 2; grid-column-start: 2;"></p>
+        <p id="Date" style="grid-row-start: 3; grid-column-start: 2;"></p>
+      </div>
+      <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items</p>
+      <div style="width:98%; margin-left: auto; margin-right: auto;">
+        <table id="ordItemsTable" class="display">
+          <thead>
+            <th>Order id</th>
+            <th>Customer Name</th>
+            <th>Num of Items</th>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      
+  </div>
+<button onclick="openDelOL()" style="position: fixed; right:500px; top:500px">button</button>
+</body>
+</html>
+

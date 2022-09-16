@@ -1,0 +1,117 @@
+/*Topbar*/
+.topBar{
+    width:100%;
+    border-bottom: black solid 1px;
+    box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 6.5vh;
+    position:fixed;
+    top:0;
+    left:0;
+}
+.topBarText{
+    font-size: 2.5vh;
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight:700 ;
+
+}
+.mainTopBarCol{
+    background-color: rgb(29, 42, 49);
+    color:white;
+}
+.pageTopBarCol{
+    background-color:darkgray;
+    color:white;
+}
+.topBarLogOut{
+    cursor: pointer;
+}
+.topBarLogOut :hover{
+    box-shadow: 2px ;
+}
+.backButton{
+    display:flex; 
+    align-items:center;  
+    margin-right:3vw;
+    position:relative;
+    cursor: pointer;
+}
+.backButton > a{
+    color:inherit;
+    text-decoration:none;
+    display:block;
+    height: 100%;
+    width: 100%;
+    position:absolute;
+    top:0;
+    left:0;
+    border-radius: 20px;
+}
+
+/*content*/
+.contentContainer{
+    position:relative;
+    top:7vh;
+    display: flex;
+    flex-direction: column;
+    margin-top:0%;
+    transition:0.2s; 
+}
+.contentLabelText{
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 700;
+    font-size: 2.5vw;
+}
+.button{
+    width:fit-content;
+    height: 4vw;
+    min-height: fit-content;
+    font-size: 2.5vw;
+    display: flex;
+    align-items: center;
+    background-color: rgb(29, 42, 49);
+    border-radius: 2.61vw;
+    color: white;
+    padding:2px;
+    position:relative;
+}
+/*overlays*/
+.overlayContainer{
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;/*!!!!!!!!!!!!!!*/
+    height: 100%;
+    overflow-x: hidden;
+    z-index: 2;
+    background-color: white;
+    transition:0.2s; 
+}
+.overlayTopBar{ 
+    background-color: white;
+    color:black;
+    width: 100%;
+    border-bottom: black solid 1px;
+    box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
+    display: flex;
+    justify-content: space-between;
+    height: 6.5vh;
+    align-items: center;
+}
+.overlayContentContainer{
+    display: flex;
+    flex-direction: column;
+    margin-top:13px;
+    margin-left: auto;
+    margin-right: auto;
+    width:96%;
+}  
+
+/*tables*/
+.table{
+    border:lightgrey solid 0.5px;
+    font-size: 3vw;
+    margin-top:3vh;
+}

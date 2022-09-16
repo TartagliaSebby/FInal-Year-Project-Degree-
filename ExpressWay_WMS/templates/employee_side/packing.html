@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> </title> 
+    <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--libraries-->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
+    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
+    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <script>
+        //initialise data tables
+         $(document).ready( function () {
+            $('#orderListTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,
+            //make sure task table displays at least a min number of rows
+            drawCallback: function(){
+                    var api =  $('#orderListTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i<api.page.len() - rows; i++){
+                        $('#orderListTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                    }
+                }
+            });
+            $('#orderItemsTable').DataTable({"searching":false, "lengthChange":false, "info":false,"pageLength":5,
+                //make sure asn table displays at least a min number of rows
+                drawCallback: function(){
+                    var api =  $('#orderItemsTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i<api.page.len() - rows; i++){
+                        $('#orderItemsTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                    }
+                }
+            });
+         });
+        //overlay scripts
+        function openOrdItemOl(){
+            document.getElementById("overlayDelOrders").style.width="100%";
+        }
+        function closeOrdItemOl() {
+            document.getElementById("overlayDelOrders").style.width="0";
+        }
+
+
+    </script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="../../static/CSS/employee_common.css">
+    <style>
+        a{
+            color:inherit;
+            text-decoration:none;
+        }
+    </style>
+</head>
+
+<body> 
+    <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
+        <p class="topBarText" style="margin-left:3vw" >Packing </p>
+        <div class="backButton topBarText">
+            <img src="../../static/imgs/back_icon(white).png" height="40px">
+            <p> Back</p>
+            <a href="main_page.html"></a>
+        </div>
+    </div>  
+    <div class="contentContainer" >
+        <p class="contentLabelText">Order List </p>
+        <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
+            <table id="orderListTable" class="display table" >
+                <thead>
+                    <th>No</th>
+                    <th>Order id</th>
+                    <th>items</th>
+                    <th>Total Weight</th>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        
+       
+    </div>
+
+    <!--Overlay for Order items-->
+    <div id="overlayDelOrders" class="overlayContainer" >
+        <div class="topBarText  overlayTopBar ">
+            <span style="margin-left: 3vw;">Order Items</span>
+            <div class="backButton" onclick="closeOrdItemOl()">
+                <img src="../../static/imgs/back_icon.png" >
+                <span> Back </span>
+            </div>
+        </div>
+        <div class="overlayContentContainer" >
+            <p class="contentLabelText">Order id: <span id="orderId"></span></p>
+            <table id="orderItemsTable" class="display table" >
+                <thead>
+                    <th>No</th>
+                    <th>Item id</th>
+                    <th>Quantity</th>
+                    <th>Weight</th>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+           
+            
+        </div>
+
+    </div>
+    
+
+</body>
+</html>
+

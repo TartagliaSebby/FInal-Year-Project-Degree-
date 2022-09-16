@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> </title> 
+    <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="../../static/css/employee_common.css">
+    <style>
+     
+        .clockinButton{
+            border:black 1px solid;
+            border-radius:50px;
+            width:8vw;
+            height: 3vw;
+            max-height:2.5vh;
+            padding:1vh;
+            font-size: 2vh;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 1000;
+        }
+        /*Main Navigation*/
+        .mainNavContainer{
+            display:grid;
+            grid-template-columns: auto auto;
+            grid-template-rows: auto auto auto auto;
+            width:80%;
+            height:80%;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            column-gap: 5vw;
+            row-gap: 4vh;
+        }
+        .navButton{
+            border: black solid 1px;
+            border-radius: 20px;
+            background-color:aliceblue;
+            padding:1vh;
+            min-width:200px;
+            position:relative;
+        }
+        .navButtonText{
+            font-weight: 1000;
+            display:block ;
+
+            font-size: 2vh;
+            font-family: Arial, Helvetica, sans-serif;
+            
+        }
+        .navButton > a{
+            color:inherit;
+            text-decoration:none;
+            display:block;
+            height: 100%;
+            width: 100%;
+            position:absolute;
+            top:0;
+            left:0;
+            border-radius: 20px;
+        }
+
+
+    </style>
+</head>
+
+<body> 
+    <div class="topBar mainTopBarCol">
+        <p class="topBarText" style="margin-left:3vw" >ExpressWay </p>
+        <div style="display:flex; margin-right:3vw;" class="topBarText">
+            <p id="empName" style="margin-right: 2.5vw;" >Name</p>
+            <span class="material-icons topBarLogOut" style="font-size: 5vh; align-self: center;">login</span>
+
+        </div>
+    </div>
+    <div class="contentContainer">
+        <!--clock in button-->
+        <p style="text-align: center; align-self: flex-end;"><span class="clockinButton">clock in</span></p>
+        <!--Main Navigation buttons-->
+        <div class="mainNavContainer">
+            <p style="grid-column-start: 1;grid-column-end: 3; min-height: 5vh; display: flex; justify-content: center; align-items:center;" class="navButton ">
+                <span class="navButtonText" style="align-self: center; ">Instructions</span> 
+                <a href="instructions_page.html"></a>
+            </p>
+            <div style="grid-row-start: 2;grid-column-start: 1;" class="navButton">
+                <img src="../../static/imgs/receive_icon.png" >
+                <p class="navButtonText">Receive</p>
+                <a href="receiving_page.html" ></a>
+            </div>
+            <div style="grid-row-start: 2;grid-column-start: 2;" class="navButton">
+                <img src="../../static/imgs/put_away_icon.png" >
+                <p class="navButtonText">Put Away</p>
+                <a href="put_away_page.html" ></a>
+            </div>
+            <div style="grid-row-start: 3;grid-column-start: 1;" class="navButton">
+                <img src="../../static/imgs/picking_icon.png" >
+                <p class="navButtonText">Picking</p>
+                <a href="picking_page.html" ></a>
+            </div>
+            <div style="grid-row-start: 3;grid-column-start: 2;" class="navButton">
+                <img src="../../static/imgs/packing_icon.png" >
+                <p class="navButtonText">Packing</p>
+                <a href="packing.html" ></a>
+            </div>
+            <div style="grid-row-start: 4;grid-column-start: 1;" class="navButton">
+                <img src="../../static/imgs/counting_icon.png" >
+                <p class="navButtonText">Inventory Count</p>
+                <a href="inventory_count_page.html" ></a>
+            </div>
+            <div style="grid-row-start: 4;grid-column-start: 2;" class="navButton">
+                <img src="../../static/imgs/loading_icon.png" >
+                <p class="navButtonText">Loading</p>
+                <a href="loading_page.html" ></a>
+            </div>
+        </div>
+    </div>
+
+
+    
+    
+   
+
+</body>
+</html>
+

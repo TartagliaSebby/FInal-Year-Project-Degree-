@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> ExpressWay WMS Manager side</title> 
+    <meta Charset ="utf-8">
+
+    <!--libraries-->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
+    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
+    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <!--initialising table-->
+    <script>
+      $(document).ready( function () {
+      $('#inventoryTable').DataTable();
+      $('#locationTable').DataTable({"searching":false});
+        } );
+      
+      //overlay functions  
+      function openOL(){
+        document.getElementById("overlayItems").style.width="100%";
+        //TEMP!!!!!!!!!!!!!!!
+        var tab = $('#locationTable').DataTable();
+        tab.row.add([1,2,3,4,5,6,7]).draw(false);
+      }
+      function closeOL(){
+        document.getElementById("overlayItems").style.width="0";
+        //TEMP!!!!!!!!!!!!!!!!
+        var tab = $('#locationTable').DataTable();
+        tab.clear().draw();
+      }
+
+    </script>
+
+  <link rel="stylesheet" href="../../static/css/manager_common.css">
+  <style>
+      .overlayContainer{         
+        height: 100%;
+        width: 0;
+        position:fixed;
+        overflow-x: hidden;
+        z-index:6;
+        top:0;
+        left:0;
+        background-color: rgba(255,255,255,1);
+        transition:0.4s;
+      }
+      .overlayTopBar{
+        display:flex; 
+        align-items:center;
+        border-bottom: solid 1px; 
+        box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
+        min-height:35px; 
+        font-size: 1.25em;
+        font-weight: 700;
+        margin-bottom: 15px;
+      }
+      .itemInfoGrid{
+        display:grid;
+        width:98%;
+        min-width:1000px;
+        margin-left:auto;
+        margin-right: auto;  
+        margin-bottom: 80px;
+      }
+  </style>
+</head>
+
+<body style="margin: 0; "> 
+
+   <header class="topBar" >
+    <a class="topBarText" style ="left:19px;" href="dashboard.html">ExpressWay</a>
+    <div style="display:flex;">
+      <p  class = "topBarText" style =" right:30px">PLACE HOLDER FOR NAME</p> <!--!!!!!!!!!!!!!!!!!-->
+      <p class="topBarText topBarLogOut">Log Out</p>
+    </div>
+  </header>
+
+  <div>
+    <nav class="sideBar">
+      <p  class="sideBarText"><a href="dashboard.html">Dashboard</a></p>
+      <p class="sideBarText" ><a href="order_page.html">Orders</a></p>
+      <p class="sideBarText" ><a href="inventory_page.html">Inventory</a></p>
+      <p class="sideBarText" ><a href="inbound_shipments_page.html">Inbound Shipments</a></p>
+      <p class="sideBarText" ><a href="receive _discrepancy_page.html">Receive Discrepency</a></p>
+      <p class="sideBarText" ><a href="deliveries_page.html">Deliveries</a></p>
+      <p class="sideBarText" ><a href="job_assignment.html">Job Assignment</a></p>
+      <p class="sideBarText" ><a href="employee_page.html">Employees</a></p>    
+    </nav>
+
+    <div class="contentContainer">
+      <div style="display:flex; flex-direction: column;">
+        <div class="contentTopBar">
+            <p class="contentTopBarText">Inventory</p>
+        </div>
+      
+        <!--table-->
+        <table id="inventoryTable" class="display">
+          <thead>
+            <th>Item id</th>
+            <th>Name</th>
+            <th>Seller id</th>
+            <th>Quantity</th>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!--overlay -->
+    <div id="overlayItems" class="overlayContainer">
+      <div class="overlayTopBar">
+        <span style="position:absolute; left: 20px;">Item Information</span>
+        <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeOL()">Back</span>
+      </div>
+      <div style="display:flex">
+          <p id="itemName"></p>
+          <p style="position:absolute; right:20px">Quantity: <span id="itemQuantity"></span></p>
+      </div>
+      <div class="itemInfoGrid">
+        <p style="grid-row-start: 1;">Item id</p>
+        <p style="grid-row-start: 2;">Seller id</p>
+        <p style="grid-row-start: 3;">Weight per Unit</p>
+        <p style="grid-row-start: 4;">Item desc</p>
+        <!--cells to be filled with data from database-->
+        <p id="itemID" style="grid-row-start: 1; grid-column-start:2 ;"></p>
+        <p id="sellerID" style="grid-row-start: 2; grid-column-start:2 ;"></p>
+        <p id="weight" style="grid-row-start: 3; grid-column-start:2 ;"></p>
+        <p id="desc" style="grid-row-start: 4; grid-row-end: 6;grid-column-start:2 ;"></p>
+      </div>
+      <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items Locations</p>
+      <table id="locationTable" class="display">
+        <thead>
+          <th>No</th>
+          <th>Aisle</th>
+          <th>Rack</th>
+          <th>Bay</th>
+          <th>Level</th>
+          <th>Bin</th>
+          <th>Quantity</th>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<button onclick="openOL()" style="position: fixed; right:500px; top:500px">button</button>
+</body>
+</html>
+

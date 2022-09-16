@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> </title> 
+    <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--libraries-->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
+    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
+    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <script>
+        //initialise data tables
+         $(document).ready( function () {
+            $('#pickordersTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,
+            //make sure task table displays at least a min number of rows
+            drawCallback: function(){
+                    var api =  $('#pickordersTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i<api.page.len() - rows; i++){
+                        $('#pickordersTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td></tr>"));
+                    }
+                }
+            });
+            $('#orderItemsTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,
+            //make sure task table displays at least a min number of rows
+            drawCallback: function(){
+                    var api =  $('#orderItemsTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i<api.page.len() - rows; i++){
+                        $('#orderItemsTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                    }
+                }
+            });
+         });
+        //overlay scripts
+        function openOrdItemsOl(){
+            document.getElementById("overlayOrdItems").style.width="100%";
+        }
+        function closeOrdItemsOl() {
+            document.getElementById("overlayOrdItems").style.width="0";
+        }
+
+    </script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="../../static/CSS/employee_common.css">
+    <style>
+
+    </style>
+</head>
+
+<body> 
+    <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
+        <p class="topBarText" style="margin-left:3vw" >Picking</p>
+        <div class="backButton topBarText">
+            <img src="../../static/imgs/back_icon(white).png" height="40px">
+            <p> Back</p>
+            <a href="main_page.html"></a>
+        </div>
+    </div>  
+    <div class="contentContainer" >
+        <p class="contentLabelText">Order List</p>
+        <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
+            <table id="pickordersTable" class="display table" >
+                <thead>
+                    <th>No</th>
+                    <th>Order id</th>
+                    <th>items</th>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <p class="button" style="width:30vw;"><span style="margin-left: auto; margin-right:auto;">View Picking List</span></p>
+        
+       
+    </div>
+
+    <!--Overlay for Order Items -->
+    <div id="overlayOrdItems" class="overlayContainer" >
+        <div class="topBarText  overlayTopBar ">
+            <span style="margin-left: 3vw;">Order Items</span>
+            <div class="backButton" onclick="closeOrdItemsOl()">
+                <img src="../../static/imgs/back_icon.png" >
+                <span> Back </span>
+            </div>
+        </div>
+        <div class="overlayContentContainer" >
+            <p class="contentLabelText">Order number: <span id="orderNumber"></span></p>
+            <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
+                <table id="orderItemsTable" class="display table" >
+                    <thead>
+                        <th>No</th>
+                        <th>Item id</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <!--Overlay for Picking List -->
+    <div id="overlayASN" class="overlayContainer" style="width:0" >
+        <div class="topBarText  overlayTopBar ">
+            <span style="margin-left: 3vw;">Pick List</span>
+            <div class="backButton" onclick="closeOrdItemsOl()">
+                <img src="../../imgs/back_icon.png" >
+                <span> Back </span>
+            </div>
+        </div>
+        <div class="overlayContentContainer" >
+            <p class="contentLabelText">Order number: <span id="orderNumber"></span></p>
+            <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
+                <table id="pickListTable" class="display table" >
+                    <thead>
+                        <th>No</th>
+                        <th>Item id</th>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+</body>
+</html>
+

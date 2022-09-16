@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> </title> 
+    <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--libraries-->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
+    <link rel="stylesheet" type="text/css" href="../../external_libraries/DataTables/datatables.css">
+    <script type="text/javascript" charset="utf8" src="../../external_libraries/DataTables/datatables.js"></script>
+    <script>
+         $(document).ready( function () {
+            $('#taskTable').DataTable({"searching":false, "paging":false, "info":false});
+         });
+    </script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="../../static/css/employee_common.css">
+    <style>
+
+        a{
+            color:inherit;
+            text-decoration:none;
+        }
+        
+        .completeTaskButtton{
+            display: flex;
+            justify-content: center;
+            border: black solid 1px;
+            border-radius: 30px;
+            width: 30vw;
+            min-width: 140px;
+            height: 5vw;
+            font-size:3vw;
+            font-weight: 1000;
+            align-self: flex-end;
+        }
+
+    </style>
+</head>
+
+<body> 
+    <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
+        <p class="topBarText" style="margin-left:3vw; vertical-align:middle;" >Instructions </p>
+        <div class="backButton topBarText">
+            <img src="../../static/imgs/back_icon(white).png" height="40px" style="align-self:center">
+            <p style=" align-self:center ;"> Back</p>
+            <a href="main_page.html"></a>
+        </div>
+    </div>
+    <div class="contentContainer" style="margin-top: 20px;">
+        <table id="taskTable" class="display table">
+            <thead>
+                <th>Task</th>
+                <th>Station</th>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <p class="completeTaskButtton"><a href="" style="display: block; padding:0.5vw;align-self: center;">Complete Task</a></p>
+    </div>
+
+
+    
+    
+   
+
+</body>
+</html>
+
