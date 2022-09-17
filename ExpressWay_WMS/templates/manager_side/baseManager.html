@@ -3,7 +3,7 @@
 <head>
     <title> WMS {% block title %}{% endblock %}</title>
     <!--common css for manager side-->
-    <link rel="stylesheet" href="../../static/css/manager_common.css">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/manager_common.css')}}">
 
     <!--external libraries-->
     <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
@@ -13,12 +13,12 @@
     <!-- for additional external libraries-->
     {% block external_libraries %}{% endblock %}
 
-    <script>
+
         {% block script %} {% endblock %}
-    </script>
-    <style>
+
+
         {% block style %}{% endblock %}
-    </style>
+
 </head>
 <body>
     <header class="topBar">
@@ -42,6 +42,7 @@
         <div class="contentContainer">
         {% block content%} {% endblock %}
         </div>
+        {% block externalContent %} {% endblock %}
     </div>
 </body>
 </html>

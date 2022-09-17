@@ -1,50 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title> ExpressWay WMS Manager side</title> 
-    <meta Charset ="utf-8">
-    
-  <!--libraries-->
-  <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
-  <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
-  <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
-  <!--initialising table-->
-  <script>
-    //initialise table when page is ready
-    $(document).ready( function () {
-    $('#jobTable').DataTable();
+{% extends "manager_side/baseManager.html" %}
+
+{% block title %}Job Assignment{% endblock %}
+
+{% block script %}
+<script>
+//initialise table when page is ready
+$(document).ready( function () {
+  $('#jobTable').DataTable();
       } );
-  </script>
+</script>
+{% endblock %}
 
-  <link rel="stylesheet" href="../../static/css/manager_common.css">
-  <style>
-  </style>
-</head>
 
-<body style="margin: 0; "> 
 
-<header class="topBar" >
-  <a class="topBarText" style ="left:19px;" href="ddashboard.html">ExpressWay</a>
-  <div style="display:flex;">
-    <p  class = "topBarText" style =" right:30px">PLACE HOLDER FOR NAME</p> <!--!!!!!!!!!!!!!!!!!-->
-    <p class="topBarText topBarLogOut">Log Out</p>
-  </div>
-</header>
-
-<div>
-  <nav class="sideBar">
-    <p  class="sideBarText"><a href="dashboard.html">Dashboard</a></p>
-    <p class="sideBarText" ><a href="order_page.html">Orders</a></p>
-    <p class="sideBarText" ><a href="inventory_page.html">Inventory</a></p>
-    <p class="sideBarText" ><a href="inbound_shipments_page.html">Inbound Shipments</a></p>
-    <p class="sideBarText" ><a href="receive _discrepancy_page.html">Receive Discrepency</a></p>
-    <p class="sideBarText" ><a href="deliveries_page.html">Deliveries</a></p>
-    <p class="sideBarText" ><a href="job_assignment.html">Job Assignment</a></p>
-    <p class="sideBarText" ><a href="employee_page.html">Employees</a></p>    
-  </nav>
-
-  <div class="contentContainer">
-    <div style="display:flex; flex-direction: column;">
+{% block content %}
+<div style="display:flex; flex-direction: column;">
       <div class="contentTopBar">
           <p class="contentTopBarText">Job Assignment</p>
       </div>
@@ -58,15 +28,8 @@
           <th>Station</th>
         </thead>
         <tbody>
-
         </tbody>
       </table>
-      <button style="align-self: flex-end; margin-top:20px; width:110px; height: 30px;" ><a href="pick_pack_assignment_page.html">Assign Jobs</a></button>
+      <button style="align-self: flex-end; margin-top:20px; width:110px; height: 30px;" ><a href="/pick_pack_assignment">Assign Jobs</a></button>
     </div>
-  </div>
-</div>
-
-
-</body>
-</html>
-
+{% endblock%}

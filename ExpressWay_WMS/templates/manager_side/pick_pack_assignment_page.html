@@ -1,19 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title> ExpressWay WMS Manager side</title> 
-    <meta Charset ="utf-8">
+{% extends "manager_side/baseManager.html" %}
 
-    <!--libraries-->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
-    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
-    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
-    <!--checkbox extension for datatables-->
-    <link type="text/css" href="//gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/css/dataTables.checkboxes.css" rel="stylesheet" />
-    <script type="text/javascript" src="../../external_libraries/DataTablesCheckbox/dataTables.checkboxes.min.js"></script>
-    <script>
-      //initialise tables when document is ready
-      $(document).ready( function () {
+{% block title %} Pick Pack Assignment {% endblock %}
+
+{% block script %}
+<link type="text/css" href="//gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/css/dataTables.checkboxes.css" rel="stylesheet" />
+<script type="text/javascript" src="../../external_libraries/DataTablesCheckbox/dataTables.checkboxes.min.js"></script>
+<script>
+//initialise tables when document is ready
+$(document).ready( function () {
           $('#pendingOrderTable').DataTable({
             'columnDefs' : [{
               'targets':0,
@@ -28,7 +22,7 @@
         $('#selectEmpTable').DataTable();
         $('#selectVecTable').DataTable();
       })
-      /*scripts for moving between steps for job assignment */
+       /*scripts for moving between steps for job assignment */
       //global variables
       var stepIndicatorList;
       var overlayList;
@@ -57,12 +51,13 @@
       function finish(){
 
       }
-    </script>
+</script>
 
+{% endblock %}
 
-    <link rel="stylesheet" href="../../static/css/manager_common.css">
-    <style>
-      .dashboardContainer{
+{% block style %}
+<style>
+.dashboardContainer{
         border:solid black 2px;
         margin-left: 50px;
         margin-top:50px; 
@@ -72,14 +67,14 @@
         height:150px;
         align-items: center;
       }
-      .tableOverlayContainer{        
+.tableOverlayContainer{        
         width: 0;
         overflow-x: hidden;
         z-index: 2;
         background-color: rgba(255,255,255,1);
         transition:0.2s;
       }
-      .tableOverlayTopBar{
+.tableOverlayTopBar{
         display:flex; 
         align-items:center;
         border-bottom: solid 1px; 
@@ -89,53 +84,32 @@
         font-weight: 700;
         margin-bottom: 15px;
         }
-      .stepButton{
+.stepButton{
         height:35px;
         margin-left: 20px;
         transition: 0.3s;
         cursor: pointer;
         font-weight: bold;
       }
-      .nextButton{
+.nextButton{
         background-color: rgb(118, 246, 118) ;
       }
-      .nextButton:hover{
+.nextButton:hover{
         background-color: rgb(56, 167, 56);
         color:white;
       }
-      .prevButton{
+.prevButton{
         background-color: rgb(255, 229, 63);
       }
-      .prevButton:hover{
+.prevButton:hover{
         background-color: rgb(232, 151, 0);
         color:white;
       }
-    </style>
-</head>
+</style>
+{% endblock %}
 
-<body style="margin: 0; "> 
-
-   <header class="topBar" >
-    <p class="topBarText" style ="left:19px;">ExpressWay</p>
-    <div style="display:flex;">
-      <p  class = "topBarText" style =" right:30px">PLACE HOLDER FOR NAME</p>
-      <p class="topBarText topBarLogOut" >Log Out</p>
-    </div>
-  </header>
-
-  <div>
-   <nav class="sideBar">
-      <p  class="sideBarText"><a href="dashboard.html">Dashboard</a></p>
-      <p class="sideBarText" ><a href="order_page.html">Orders</a></p>
-      <p class="sideBarText" ><a href="inventory_page.html">Inventory</a></p>
-      <p class="sideBarText" ><a href="inbound_shipments_page.html">Inbound Shipments</a></p>
-      <p class="sideBarText" ><a href="receive _discrepancy_page.html">Receive Discrepency</a></p>
-      <p class="sideBarText" ><a href="deliveries_page.html">Deliveries</a></p>
-      <p class="sideBarText" ><a href="job_assignment.html">Job Assignment</a></p>
-      <p class="sideBarText" ><a href="employee_page.html">Employees</a></p>    
-    </nav>
-    <div class="contentContainer">
-      <div class="contentTopBar" style="justify-content:start; align-items: center;">
+{% block content %}
+ <div class="contentTopBar" style="justify-content:start; align-items: center;">
             <p class="contentTopBarText" style="margin-right: 2vw;">Picking/Packing Assignment</p>
             <div>
               <svg width="100px" height="60px">  
@@ -151,10 +125,11 @@
                 <polygon points="0,5 80,5 100,30 80,60 0,60" stroke="black" style="fill:rgb(217, 217, 217);" id="vehicleInd"></polygon>
                 <text x="5" y="35"  style="z-index:3; fill:black; font-weight:400">Vehicles</text>
               </svg>
-            </div>
-        </div>
-          
-          <div style="position:relative;">
+  </div>
+{% endblock %}
+
+{% block externalContent %}
+<div style="position:relative;">
             <!--Overlay for pending Orders-->
             <div id="overlayPendingOrd" class="tableOverlayContainer" style="position:absolute; width:100%;">
             <p style="margin-left:20px; font-size: 1.25em; font-weight: 500px;">Pending Orders</p>
@@ -315,15 +290,4 @@
               </div>
             </div>
           </div>
-            
-  
-
-
-        </div>
-        
-  </div>
-  
-
-</body>
-</html>
-
+{% endblock%}

@@ -3,6 +3,7 @@
 {%block title%} Dashboard{% endblock %}
 
 {%block style%} 
+<style>
 .dashboardContainer{
   border:solid black 2px;
   display: flex;
@@ -12,12 +13,14 @@
   align-items: center;
   margin-top:20px;
 }
+</style>
+
 {%endblock%}
 
 {% block content %}
 <div class ="dashboardContainer"><!--!!!!!!!!!!!!!!!!!!!!!!-->
-  <p style="margin-left: 10px;"> <span></span> Orders to be fulfiled</p>
-  <p><span></span> inbound Shipments</p>
-  <p style="margin-right: 10px;"><span></span> Present</p>
+  <p style="margin-left: 10px;"> {{numOrdTBF}} Orders to be fulfiled</p>
+  <p>{{numInboundShipment}} inbound Shipments</p>
+  <p style="margin-right: 10px;">{{numEmpPresent}} Present</p>
  </div>
 {% endblock %}

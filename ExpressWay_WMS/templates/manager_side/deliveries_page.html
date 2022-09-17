@@ -1,7 +1,10 @@
 {% extends "manager_side/baseManager.html" %}
 
+{%block title%} Delivery{%endblock%}
+
 {% block script %} 
-      $(document).ready( function () {
+<script>
+ $(document).ready( function () {
       $('#deliveryTable').DataTable({select: 'single'});
       $('#deliveryOrdersTable').DataTable({select: 'single', "searching":false});
       $('#ordItemsTable').DataTable({select: 'single', "searching":false});
@@ -32,9 +35,12 @@
         var tab = $('#locationTable').DataTable();
         tab.clear().draw();
       }
+</script>
 {% endblock %}
+
 {%block style%} 
-  .overlayContainer{         
+<style>
+.overlayContainer{         
         height: 100%;
         width: 0;
         position:fixed;
@@ -63,6 +69,8 @@
         margin-right: auto;  
         margin-bottom: 80px;
       }
+</style>
+  
 {% endblock %}
 
 {% block content%} 
@@ -82,8 +90,10 @@
           </tbody>
         </table>
     </div>
-    <div>
-     <!--overlay for delivery-->
+{% endblock %}
+
+{%block externalContent%} 
+<!--overlay for delivery-->
      <div id="overlayDelivery" class="overlayContainer">
       <div class="overlayTopBar">
         <span style="position:absolute; left: 20px;">Delivery</span>
@@ -135,7 +145,6 @@
           </tbody>
         </table>
       </div>
-      
     </div>
     <button onclick="openDelOL()" style="position: fixed; right:500px; top:500px">button</button>
 {% endblock %}

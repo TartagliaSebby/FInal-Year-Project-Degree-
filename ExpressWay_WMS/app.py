@@ -10,8 +10,9 @@ def login_page():
 """""
 @app.route("/")
 def main():
-    return render_template("manager_side/dashboard.html")
+    return render_template("employee_side/main_page.html")
 
+# manager side pages
 @app.route("/dashboard")
 def dashboard():
     return render_template("manager_side/dashboard.html")
@@ -43,6 +44,43 @@ def job_assigment_page():
 @app.route("/employees")
 def employee_page():
     return render_template("manager_side/employee_page.html")
+
+@app.route("/pick_pack_assignment")
+def pick_pack_assignment_page():
+    return render_template("manager_side/pick_pack_assignment_page.html")
+
+#employee side pages
+@app.route("/main_menu")
+def mainMenu():
+    return render_template("employee_side/main_page.html")
+
+@app.route("/instructions")
+def instructions():
+    return render_template("employee_side/instructions_page.html")
+
+@app.route("/receive")
+def receive():
+    return render_template("employee_side/receiving_page.html")
+
+@app.route("/putAway")
+def putAway():
+    return render_template("employee_side/put_away_page.html")
+
+@app.route("/picking")
+def picking():
+    return render_template("employee_side/picking_page.html")
+
+@app.route("/packing")
+def packing():
+    return render_template("employee_side/packing_page.html")
+
+@app.route("/inventoryCount")
+def inventoryCount():
+    return render_template("employee_side/inventory_count_page.html")
+
+@app.route("/loading")
+def loading():
+    return render_template("employee_side/Loading_page.html")
 
 if(__name__) == "__main__":
     app.run(debug=True)

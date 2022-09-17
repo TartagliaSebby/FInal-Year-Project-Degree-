@@ -1,18 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title> ExpressWay WMS Manager side</title> 
-    <meta Charset ="utf-8">
+{% extends "manager_side/baseManager.html" %}
 
-    <!--libraries-->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
-    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
-    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
-    <!--initialising table-->
-    <script>
-      
-    //when document is ready initialise discrepancy table
-    $(document).ready( function () {
+{% block title %}Discrepancy{% endblock %}
+
+{% block script %}
+<script>
+//when document is ready initialise discrepancy table
+$(document).ready( function () {
         var tab= $('#discrepancyTable').DataTable({select: 'single'}); 
          $('#discrepancyReportTable').DataTable({"searching":false});
     /*getting data from table rows!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -23,25 +16,26 @@
           }     
         });
       } );
-    /*overlay functions*/
-    function openOL(){
+/*overlay functions*/
+function openOL(){
       document.getElementById("overlayASN").style.width="100%";
       //TEMP!!!!!!!!!!!!!!!
       var tab = $('#discrepancyReportTable').DataTable();
       tab.row.add([1,2,3,4,5]).draw(false);
     }
-    function closeOL(){
+function closeOL(){
       document.getElementById("overlayASN").style.width="0";
       //TEMP!!!!!!!!!!!!!!!!
         var tab = $('#discrepancyReportTable').DataTable();
         tab.clear().draw();
     }
-    </script>
+</script>
+{% endblock %}
 
-    <link rel="stylesheet" href="../../static/css/manager_common.css">
-    <style>
-      /*overlay css*/
-      .overlayContainer{         
+{% block style %}
+<style>
+/*overlay css*/
+.overlayContainer{         
         height: 100%;
         width: 0;
         position:fixed;
@@ -52,7 +46,7 @@
         background-color: rgba(255,255,255,1);
         transition:0.4s;
       }
-      .overlayTopBar{
+.overlayTopBar{
         display:flex; 
         align-items:center;
         border-bottom: solid 1px; 
@@ -62,7 +56,7 @@
         font-weight: 700;
         margin-bottom: 15px;
         }
-      .discrepancyInfoGrid{
+.discrepancyInfoGrid{
         display: grid;
         column-gap: 20px;
         width:98%;
@@ -73,33 +67,11 @@
         font-family: 'Times New Roman', Times, serif;
         font-size: 1.25em;
         }
-    </style>
-</head>
-<body style="margin: 0; "> 
-  <!--top nav bar-->
-  <header class="topBar" >
-  <a class="topBarText" style ="left:19px;" href="dashboard.html">ExpressWay</a>
-  <div style="display:flex;">
-    <p  class = "topBarText" style =" right:30px">PLACE HOLDER FOR NAME</p> <!--!!!!!!!!!!!!!!!!!-->
-    <p class="topBarText topBarLogOut" > Log Out </p>
-  </div>
-  </header>
+</style>
+{% endblock %}
 
-  <div>
-    <!--side Nav bar-->
-    <nav class="sideBar">
-      <p  class="sideBarText"><a href="dashboard.html">Dashboard</a></p>
-      <p class="sideBarText" ><a href="order_page.html">Orders</a></p>
-      <p class="sideBarText" ><a href="inventory_page.html">Inventory</a></p>
-      <p class="sideBarText" ><a href="inbound_shipments_page.html">Inbound Shipments</a></p>
-      <p class="sideBarText" ><a href="receive _discrepancy_page.html">Receive Discrepency</a></p>
-      <p class="sideBarText" ><a href="deliveries_page.html">Deliveries</a></p>
-      <p class="sideBarText" ><a href="job_assignment.html">Job Assignment</a></p>
-      <p class="sideBarText" ><a href="employee_page.html">Employees</a></p>    
-    </nav>
-
-    <div class="contentContainer">
-      <div style="display:flex; flex-direction: column;">
+{% block content %}
+<div style="display:flex; flex-direction: column;">
         <div class="contentTopBar">
             <p class="contentTopBarText">Shipments with Damaged/Missing Items</p>
         </div>
@@ -118,8 +90,10 @@
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
+</div>
+{% endblock %}
+
+{% block externalContent %}
   <!--overlay for ASN-->
   <div id="overlayASN" class="overlayContainer">
     <div style="display:flex; flex-direction: column; ">
@@ -162,6 +136,4 @@
     </div>
   </div>
   <button onclick="openOL()" style="position: fixed; right:500px; top:500px">button</button>
-</body>
-</html>
-
+{% endblock %}
