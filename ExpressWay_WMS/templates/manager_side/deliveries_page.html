@@ -1,15 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title> ExpressWay WMS Manager side</title> 
-    <meta Charset ="utf-8">
+{% extends "manager_side/baseManager.html" %}
 
-    <!--libraries-->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
-    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
-    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
-    <!--initialising table-->
-    <script>
+{% block script %} 
       $(document).ready( function () {
       $('#deliveryTable').DataTable({select: 'single'});
       $('#deliveryOrdersTable').DataTable({select: 'single', "searching":false});
@@ -41,16 +32,14 @@
         var tab = $('#locationTable').DataTable();
         tab.clear().draw();
       }
-    </script>
-
-    <link rel="stylesheet" href="../../static/css/manager_common.css">
-    <style>
-      .overlayContainer{         
+{% endblock %}
+{%block style%} 
+  .overlayContainer{         
         height: 100%;
         width: 0;
         position:fixed;
         overflow-x: hidden;
-        z-index: 6;
+        z-index: 10;
         top:0;
         left:0;
         background-color: rgba(255,255,255,1);
@@ -74,33 +63,10 @@
         margin-right: auto;  
         margin-bottom: 80px;
       }
-    </style>
-</head>
+{% endblock %}
 
-<body style="margin: 0; "> 
-
-   <header class="topBar">
-    <a class="topBarText" style ="left:19px;" href="dashboard.html">ExpressWay</a>
-    <div style="display:flex;">
-      <p  class = "topBarText" style =" right:30px">PLACE HOLDER FOR NAME</p> <!--!!!!!!!!!!!!!!!!!-->
-      <p class="topBarText topBarLogOut">Log Out</p>
-    </div>
-  </header>
-
-  <div>
-    <nav class="sideBar">
-      <p  class="sideBarText"><a href="dashboard.html">Dashboard</a></p>
-      <p class="sideBarText" ><a href="order_page.html">Orders</a></p>
-      <p class="sideBarText" ><a href="inventory_page.html">Inventory</a></p>
-      <p class="sideBarText" ><a href="inbound_shipments_page.html">Inbound Shipments</a></p>
-      <p class="sideBarText" ><a href="receive _discrepancy_page.html">Receive Discrepency</a></p>
-      <p class="sideBarText" ><a href="deliveries_page.html">Deliveries</a></p>
-      <p class="sideBarText" ><a href="job_assignment.html">Job Assignment</a></p>
-      <p class="sideBarText" ><a href="employee_page.html">Employees</a></p>    
-    </nav>
-
-    <div class="contentContainer">
-      <div style="display:flex; flex-direction: column;">
+{% block content%} 
+    <div style="display:flex; flex-direction: column;">
         <div class="contentTopBar">
             <p class="contentTopBarText">Deliveries</p>
         </div>
@@ -115,8 +81,8 @@
           <tbody>
           </tbody>
         </table>
-      </div>
     </div>
+    <div>
      <!--overlay for delivery-->
      <div id="overlayDelivery" class="overlayContainer">
       <div class="overlayTopBar">
@@ -170,8 +136,6 @@
         </table>
       </div>
       
-  </div>
-<button onclick="openDelOL()" style="position: fixed; right:500px; top:500px">button</button>
-</body>
-</html>
-
+    </div>
+    <button onclick="openDelOL()" style="position: fixed; right:500px; top:500px">button</button>
+{% endblock %}

@@ -1,9 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <title> WMS {% block title %}{% endblock %}</title>
+    <!--common css for manager side-->
+    <link rel="stylesheet" href="../../static/css/manager_common.css">
 
+    <!--external libraries-->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
+    <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
+    <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+
+    <!-- for additional external libraries-->
+    {% block external_libraries %}{% endblock %}
+
+    <script>
+        {% block script %} {% endblock %}
+    </script>
+    <style>
+        {% block style %}{% endblock %}
+    </style>
 </head>
 <body>
-    
+    <header class="topBar">
+        <a class="topBarText" style ="left:19px;" href="dashboard.html">ExpressWay</a>
+        <div style="display:flex;">
+          <p  class = "topBarText" style =" right:30px">PLACE HOLDER FOR NAME</p> <!--!!!!!!!!!!!!!!!!!-->
+          <p class="topBarText topBarLogOut">Log Out</p>
+        </div>
+    </header>
+    <div>
+        <nav class="sideBar">
+            <p  class="sideBarText"><a href="/dashboard">Dashboard</a></p>
+            <p class="sideBarText" ><a href="/orders">Orders</a></p>
+            <p class="sideBarText" ><a href="/inventory">Inventory</a></p>
+            <p class="sideBarText" ><a href="/inbound_shipments">Inbound Shipments</a></p>
+            <p class="sideBarText" ><a href="/receive_discrepancies">Receive Discrepency</a></p>
+            <p class="sideBarText" ><a href="/deliveries">Deliveries</a></p>
+            <p class="sideBarText" ><a href="/job_assignment">Job Assignment</a></p>
+            <p class="sideBarText" ><a href="/employees">Employees</a></p>    
+        </nav>
+        <div class="contentContainer">
+        {% block content%} {% endblock %}
+        </div>
+    </div>
 </body>
 </html>
