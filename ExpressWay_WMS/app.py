@@ -80,7 +80,7 @@ def inventoryCount():
 
 @app.route("/loading")
 def loading():
-    return render_template("employee_side/Loading_page.html")
+    return render_template("employee_side/loading_page.html")
 
 if(__name__) == "__main__":
     app.run(debug=True)
