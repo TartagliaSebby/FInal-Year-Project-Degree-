@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for, render_template
 from flask_sqlalchemy import SQLAlchemy
-from database import database
+from database import database 
+from database import db
 
 app = Flask(__name__)
 
@@ -15,8 +16,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-db = SQLAlchemy(app)
 
+
+db.init_app(app)
 """"
 build login page then use this function
 @app.route('/')
