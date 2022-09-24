@@ -1,6 +1,21 @@
 from flask import Flask, redirect, url_for, render_template
+from flask_sqlalchemy import SQLAlchemy
+from database import database
 
 app = Flask(__name__)
+
+#database connection 
+SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
+    username="sebas",
+    password="FypDatabase",
+    hostname="Sebas.mysql.pythonanywhere-services.com",
+    databasename="Sebas$FYP",
+)
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
 
 """"
 build login page then use this function
