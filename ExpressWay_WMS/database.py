@@ -5,14 +5,13 @@ database = Blueprint("database", __name__)
 
 db = SQLAlchemy()
 
-class Seller(db.Model):
-    _id = db.Column(db.Integer, primary_key =True)
+class seller(db.Model):
     seller_id = db.Column(db.String(6), nullable=False, primary_key=True)
     seller_name =db.Column(db.String(50), nullable=False)
 
-class Item(db.Model):
+class item(db.Model):
     item_id = db.Column(db.Integer, primary_key =True)
-    seller_id = db.Column(db.String(6), db.ForeignKey(Seller.seller_id))
+    seller_id = db.Column(db.String(6), db.ForeignKey(seller.seller_id))
     item_name = db.Column(db.String(50), nullable=False)
     item_desc = db.Column(db.String(150))
     weight = db.Column(db.Integer)

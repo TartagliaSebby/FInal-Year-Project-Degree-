@@ -1,13 +1,13 @@
 from flask import Flask, redirect, url_for, render_template
 from flask_sqlalchemy import SQLAlchemy
-from database import database 
 from database import db
+#for python anywhere   from ExpressWay_WMS.database import db
 
 app = Flask(__name__)
 
 #database connection 
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
-    username="sebas",
+    username="Sebas",
     password="FypDatabase",
     hostname="Sebas.mysql.pythonanywhere-services.com",
     databasename="Sebas$FYP",
@@ -17,8 +17,10 @@ app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
-
+#initialise database and create tables if not exist
 db.init_app(app)
+with app.app_context():
+    db.create_all()
 """"
 build login page then use this function
 @app.route('/')
