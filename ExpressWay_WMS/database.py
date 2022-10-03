@@ -1,3 +1,4 @@
+from turtle import position
 from flask import Blueprint, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
@@ -46,9 +47,9 @@ class receive_discrepancies(db.Model):
     asn_id = db.Column(mysql.INTEGER(6), db.ForeignKey(asn.asn_id), primary_key =True)
     item_id = db.Column(mysql.INTEGER(6),db.ForeignKey(item.item_id), primary_key =True)
     note = db.Column(db.String(200))
-    expected = db.column(mysql.INTEGER(4))
-    received = db.column(mysql.INTEGER(4))
-    damaged = db.column(mysql.INTEGER(4))
+    expected = db.Column(mysql.INTEGER(4))
+    received = db.Column(mysql.INTEGER(4))
+    damaged = db.Column(mysql.INTEGER(4))
     item =relationship("item", back_populates="item")
     asn = relationship("asn", back_populates="asn")
 
@@ -86,6 +87,8 @@ class employee(db.Model):
     name = db.Column(db.String(40))
     email = db.Column(db.String(50))
     phone_no = db.Column(mysql.INTEGER(10))
+    position = db.Column(db.String(10))
+    password = db.Column(db.String(16), nullable=False)
 
 class Instructions(db.Model):
     emp_id = db.Column(mysql.INTEGER(4), db.ForeignKey(employee.emp_id), primary_key = True)
