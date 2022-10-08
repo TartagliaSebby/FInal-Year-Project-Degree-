@@ -2,24 +2,46 @@
 
 {% block title %} Order{% endblock %}
 
-{% block script %} 
+{% block script %}
 <script>
+
+
+
 $(document).ready( function () {
-        $('#orderTable').DataTable();
-        $('#orderItemsTable').DataTable({"searching":false});
+        $('#orderTable').DataTable({
+            select: 'single',
+            data: {{orderTable_data|safe}},
+            columns: [
+                {title:'Order id'},
+                {title:'Customer Name'},
+                {title:'Num of items'},
+                {title:'status'},
+                {title:'Placed Date'},
+                ]
+        });
+        $('#orderItemsTable').DataTable();
         } );
 
-//overlay functions  
+var tab = $('#orderTable').DataTable();
+         tab.on('select', function(e, dt, type, indexes){
+           var data = table.rows( indexes ).data().pluck( 'order id' );
+           alert(data);
+        })
+
+//overlay functions
 function openOL(){
         document.getElementById("overlayOrder").style.width="100%";
         //TEMP!!!!!!!!!!!!!!!
-        var tab = $('#orderItemsTable').DataTable();
-        tab.row.add([1,2,3,4,5]).draw(false);
+        var tab = $('#orderTable').DataTable();
+         tab.on('select', function(e, dt, type, indexes){
+           var data = table.rows( indexes ).data().pluck( 'order id' );
+        })
       }
 function closeOL(){
         document.getElementById("overlayOrder").style.width="0";
         //TEMP!!!!!!!!!!!!!!!!
         var tab = $('#orderItemsTable').DataTable();
+
         tab.clear().draw();
       }
 
@@ -28,7 +50,7 @@ function closeOL(){
 
 {% block style %}
 <style>
-.overlayContainer{         
+.overlayContainer{
         height: 100%;
         width: 0;
         position:fixed;
@@ -40,11 +62,11 @@ function closeOL(){
         transition:0.4s;
       }
 .overlayTopBar{
-        display:flex; 
+        display:flex;
         align-items:center;
-        border-bottom: solid 1px; 
+        border-bottom: solid 1px;
         box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
-        min-height:35px; 
+        min-height:35px;
         font-size: 1.25em;
         font-weight: 700;
         margin-bottom: 15px;
@@ -54,7 +76,7 @@ function closeOL(){
         width:98%;
         min-width:1000px;
         margin-left:auto;
-        margin-right: auto;  
+        margin-right: auto;
         margin-bottom: 80px;
       }
 </style>
@@ -62,24 +84,15 @@ function closeOL(){
 {% endblock %}
 
 {% block content%}
+
 <div style="display:flex; flex-direction: column;">
         <div class="contentTopBar">
             <p class="contentTopBarText">Orders</p>
             <p class="contentTopBarText contentTopBarButton">Import </p>
         </div>
-      
+
         <!--table-->
-        <table id="orderTable" class="display">
-          <thead>
-            <th>Order id</th>
-            <th>Customer Name</th>
-            <th>Num of items</th>
-            <th>status</th>
-            <th>date</th>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
+        <table id="orderTable" class="display"></table>
       </div>
 {% endblock %}
 
@@ -113,6 +126,6 @@ function closeOL(){
       </tbody>
     </table>
   </div>
-  
+
   <button onclick="openOL()" style="position: fixed; right:500px; top:500px">button</button>
 {% endblock %}
