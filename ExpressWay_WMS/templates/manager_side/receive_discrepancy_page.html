@@ -6,22 +6,55 @@
 <script>
 //when document is ready initialise discrepancy table
 $(document).ready( function () {
-        var tab= $('#discrepancyTable').DataTable({select: 'single'}); 
-         $('#discrepancyReportTable').DataTable({"searching":false});
+        var disctab= $('#discrepancyTable').DataTable({
+          select: 'single',
+          data:{{discrepancy|safe}},
+          columns:[
+            {title:"Shipment No"},
+            {title:"Seller Name"},
+            {title:"Shipment Type"},
+            {title:"Date"},
+            {title:"Time"}
+          ]
+        });
+
+         $('#discrepancyReportTable').DataTable({"searching":false,
+                "lengthChange": false,
+                paging:false,
+                "info":false});
     /*getting data from table rows!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
-         tab.on( 'select', function ( e, dt, type, indexes ) {
+         disctab.on( 'select', function ( e, dt, type, indexes ) {
           if(type=="row"){
-            var data = tab.rows(indexes).data().pluck('1')
-            alert(data[0]);
-          }     
+            var asn_id = disctab.rows(indexes).data().pluck('0')[0];
+            $.ajax({
+                url: '/receive_discrepancies',
+                type: "POST",
+                data: {"asn_id":asn_id},
+                dataType: "json",
+                success: function(data){
+                    openOL(data)
+                },
+                error: function(data){
+                  alert("failed")
+                }
+              });
+          }
         });
       } );
 /*overlay functions*/
-function openOL(){
+function openOL(data){
       document.getElementById("overlayASN").style.width="100%";
-      //TEMP!!!!!!!!!!!!!!!
+      //update overlay interface with data retrieved from post
+      var olData = data.overlay
+      var tableData = data.table
+      document.getElementById("shipmentNo").textContent = olData.shipment_no
+      document.getElementById("sellerName").textContent = olData.seller_name
+      document.getElementById("shipmentType").textContent = olData.shipment_type
+      document.getElementById("arrivalDate").textContent = olData.date
+      document.getElementById("arrivalTime").textContent = olData.time
+      document.getElementById("note").textContent = olData.note
       var tab = $('#discrepancyReportTable').DataTable();
-      tab.row.add([1,2,3,4,5]).draw(false);
+      tab.rows.add(tableData).draw(false);
     }
 function closeOL(){
       document.getElementById("overlayASN").style.width="0";
@@ -30,12 +63,13 @@ function closeOL(){
         tab.clear().draw();
     }
 </script>
+
 {% endblock %}
 
 {% block style %}
 <style>
 /*overlay css*/
-.overlayContainer{         
+.overlayContainer{
         height: 100%;
         width: 0;
         position:fixed;
@@ -47,11 +81,11 @@ function closeOL(){
         transition:0.4s;
       }
 .overlayTopBar{
-        display:flex; 
+        display:flex;
         align-items:center;
-        border-bottom: solid 1px; 
+        border-bottom: solid 1px;
         box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
-        min-height:35px; 
+        min-height:35px;
         font-size: 1.25em;
         font-weight: 700;
         margin-bottom: 15px;
@@ -62,8 +96,8 @@ function closeOL(){
         width:98%;
         min-width:1000px;
         margin-left:auto;
-        margin-right: auto;          
-        grid-template-columns: 200px auto 200px auto;  
+        margin-right: auto;
+        grid-template-columns: 200px auto 200px auto;
         font-family: 'Times New Roman', Times, serif;
         font-size: 1.25em;
         }
@@ -75,20 +109,9 @@ function closeOL(){
         <div class="contentTopBar">
             <p class="contentTopBarText">Shipments with Damaged/Missing Items</p>
         </div>
-        
+
         <!--table-->
-        <table id="discrepancyTable" class="display">
-          <thead>
-            <th>Shipment No</th>
-            <th>seller id</th>
-            <th>Seller Name</th>
-            <th>Shipment Type</th>
-            <th>Date</th>
-            <th>Time</th>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
+        <table id="discrepancyTable" class="display">  </table>
       </div>
 </div>
 {% endblock %}
@@ -103,16 +126,14 @@ function closeOL(){
       </div>
       <div class="discrepancyInfoGrid">
           <p style="grid-row-start:1;">Shipment No</p>
-          <p style="grid-row-start:2;">Seller id</p>
-          <p style="grid-row-start:3;">Seller Name</p>
-          <p style="grid-row-start:4;">Shipment Type</p>
+          <p style="grid-row-start:2;">Seller Name</p>
+          <p style="grid-row-start:3;">Shipment Type</p>
           <p style="grid-row-start:1;grid-column-start:3">Arrival Date</p>
           <p style="grid-row-start:2;grid-column-start:3">Arrival Time</p>
           <!--cells to be filled with data from datbase-->
           <p id="shipmentNo" style="grid-row-start: 1; grid-column-start:2"></p>
-          <p id="sellerId" style="grid-row-start: 2; grid-column-start:2"></p>
-          <p id="sellerName" style="grid-row-start: 3; grid-column-start:2"></p>
-          <p id="shipmentType" style="grid-row-start: 4; grid-column-start:2"></p>
+          <p id="sellerName" style="grid-row-start: 2; grid-column-start:2"></p>
+          <p id="shipmentType" style="grid-row-start: 3; grid-column-start:2"></p>
           <p id="arrivalDate" style="grid-row-start: 1; grid-column-start:4"></p>
           <p id="arrivalTime" style="grid-row-start: 2; grid-column-start:4"></p>
       </div>
@@ -129,10 +150,10 @@ function closeOL(){
       </table>
       <div style="width:95%; margin-left: auto;margin-right: auto;">
         <p style="font-weight:700; font-size: 1.5em;">Notes</p>
-        <p style=" height: 300px; border:solid black 0.8px"></p>
+        <p style=" height: 300px; border:solid black 0.8px"><span id="note" style ="margin:15px"></span></p>
 
       </div>
-     
+
     </div>
   </div>
   <button onclick="openOL()" style="position: fixed; right:500px; top:500px">button</button>

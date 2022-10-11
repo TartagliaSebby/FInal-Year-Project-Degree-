@@ -2,45 +2,117 @@
 
 {%block title%} Delivery{%endblock%}
 
-{% block script %} 
+{% block script %}
 <script>
  $(document).ready( function () {
-      $('#deliveryTable').DataTable({select: 'single'});
-      $('#deliveryOrdersTable').DataTable({select: 'single', "searching":false});
-      $('#ordItemsTable').DataTable({select: 'single', "searching":false});
-       } );
+      var delTab = $('#deliveryTable').DataTable({
+      select: 'single',
+      data:{{deliveryData|safe}},
+      columns:[
+        {title:"Delivery id"},
+        {title:"Vehicle Num"}
+      ]
+    });
+      var delOrdTab = $('#deliveryOrdersTable').DataTable({
+        select: 'single',
+        "searching":false,
+        "lengthChange": false,
+        paging:false,
+        "info":false
+        });
+      $('#ordItemsTable').DataTable({
+        "lengthChange": false,
+        "searching":false,
+        paging:false,
+        "info":false,
+        columns:[
+        {title:"No"},
+        {title:"Item id"},
+        {title:"Name"},
+        {title:"Seller Name"},
+        {title:"Quantity"}
+      ]
+        });
+    //event listeners
+    delTab.on('select', function ( e, dt, type, indexes ){
+      if(type=="row"){
+        var del_id = delTab.rows(indexes).data().pluck('0')[0];
+        $.ajax({
+                url: '/',
+                type: "POST",
+                data: {"del_id":del_id, "table":"del_orders"},
+                dataType: "json",
+                success: function(data){
+                    openDelOL(data);
+                },
+                error: function(data){
+                  alert("failed");
+                }
+              });
+      }
+    })
+    delOrdTab.on('select', function ( e, dt, type, indexes ){
+      if(type=="row"){
+        var del_id = delOrdTab.rows(indexes).data().pluck('0')[0];
+        $.ajax({
+                url: '/',
+                type: "POST",
+                data: {"del_ord_id":del_id, "table":"del_ord_items"},
+                dataType: "json",
+                success: function(data){
+                  //alert(JSON.stringify(data));
+                    openOrdItemsOL(data)
+                },
+                error: function(data){
+                  alert("failed")
+                }
+              });
+      }
+    })
+       });
 
-      //overlay functions  
-      function openDelOL(){
+      //overlay functions
+      function openDelOL(data){
         document.getElementById("overlayDelivery").style.width="100%";
-        //TEMP!!!!!!!!!!!!!!!
-        var tab = $('#locationTable').DataTable();
-        tab.row.add([1,2,3,4,5,6,7]).draw(false);
+        //update overlay interface with data retrieved from post
+        var olData = data.overlay;
+        var tableData = data.table;
+        document.getElementById("del_id").textContent = olData.del_id;
+        document.getElementById("vehicle_num").textContent = olData.vehicle_num;
+        document.getElementById("time").textContent = olData.time;
+
+        var tab = $('#deliveryOrdersTable').DataTable();
+        tab.rows.add(tableData).draw();
       }
       function closeDelOL(){
         document.getElementById("overlayDelivery").style.width="0";
         //TEMP!!!!!!!!!!!!!!!!
-        var tab = $('#locationTable').DataTable();
+        var tab = $('#deliveryOrdersTable').DataTable();
         tab.clear().draw();
       }
-      function openOrdItemsOL(){
+      function openOrdItemsOL(data){
         document.getElementById("overlayOrdItems").style.width="100%";
-        //TEMP!!!!!!!!!!!!!!!
-        var tab = $('#locationTable').DataTable();
-        tab.row.add([1,2,3,4,5,6,7]).draw(false);
+        //update overlay interface with data retrieved from post
+        var olData = data.overlay;
+        var tableData = data.table;
+        document.getElementById("orderID").textContent = olData.ord_id;
+        document.getElementById("customerName").textContent = olData.cust_name;
+        document.getElementById("Date").textContent = olData.date;
+        var tab = $('#ordItemsTable').DataTable();
+        tab.rows.add(tableData).draw();
       }
       function closeOrdItemsOL(){
         document.getElementById("overlayOrdItems").style.width="0";
         //TEMP!!!!!!!!!!!!!!!!
-        var tab = $('#locationTable').DataTable();
+        var tab = $('#ordItemsTable').DataTable();
         tab.clear().draw();
       }
 </script>
 {% endblock %}
 
-{%block style%} 
+{%block style%}
 <style>
-.overlayContainer{         
+.overlayContainer{
         height: 100%;
         width: 0;
         position:fixed;
@@ -52,52 +124,38 @@
         transition:0.4s;
       }
       .overlayTopBar{
-        display:flex; 
+        display:flex;
         align-items:center;
-        border-bottom: solid 1px; 
+        border-bottom: solid 1px;
         box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
-        min-height:35px; 
+        min-height:35px;
         font-size: 1.25em;
         font-weight: 700;
         margin-bottom: 15px;
       }
       .delOrderInfoGrid{
         display:grid;
-        width:98%;
+        width:1000px;
         min-width:1000px;
-        margin-left:auto;
-        margin-right: auto;  
+        margin-left:20px;
         margin-bottom: 80px;
       }
 </style>
-  
+
 {% endblock %}
 
-{% block content%} 
+{% block content%}
     <div style="display:flex; flex-direction: column;">
         <div class="contentTopBar">
             <p class="contentTopBarText">Deliveries</p>
         </div>
-      
+
         <!--table-->
-        <table id="deliveryTable" class="display">
-          <thead>
-            <th>Order id</th>
-            <th>Delivery id</th>
-            <th>Vehicle Num</th>
-          </thead>
-          <tbody>
-            <tr>
-              <td>0021</td>
-              <td>1032</td>
-              <td>124124</td>
-            </tr>
-          </tbody>
-        </table>
+        <table id="deliveryTable" class="display"></table>
     </div>
 {% endblock %}
 
-{%block externalContent%} 
+{%block externalContent%}
 <!--overlay for delivery-->
      <div id="overlayDelivery" class="overlayContainer">
       <div class="overlayTopBar">
@@ -105,42 +163,16 @@
         <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeDelOL()">Back</span>
       </div>
       <div class="delOrderInfoGrid">
-        <p style="grid-row-start: 1;">Order id</p>
-        <p style="grid-row-start: 2;">Customer Name</p>
-        <p style="grid-row-start: 3;">Date</p>
-        <p id="orderID" style="grid-row-start: 1; grid-column-start: 2;"></p>
-        <p id="customerName" style="grid-row-start: 2; grid-column-start: 2;"></p>
-        <p id="Date" style="grid-row-start: 3; grid-column-start: 2;"></p>
+        <p style="grid-row-start: 1;">Delivery id</p>
+        <p style="grid-row-start: 2;">Vehicle Num</p>
+        <p style="grid-row-start: 3;">Departure Time </p>
+        <p id="del_id" style="grid-row-start: 1; grid-column-start: 2;"></p>
+        <p id="vehicle_num" style="grid-row-start: 2; grid-column-start: 2;"></p>
+        <p id="time" style="grid-row-start: 3; grid-column-start: 2;"></p>
       </div>
       <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items</p>
       <div style="width:98%; margin-left: auto; margin-right: auto;">
         <table id="deliveryOrdersTable" class="display">
-          <thead>
-            <th>Delivery id</th>
-            <th>Vehicle Num</th>
-            <th>Departure Time</th>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-      <!--overlay for order items-->
-     <div id="overlayOrdItems" class="overlayContainer">
-      <div class="overlayTopBar">
-        <span style="position:absolute; left: 20px;">Order Items</span>
-        <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeDelOL()">Back</span>
-      </div>
-      <div class="delOrderInfoGrid">
-        <p style="grid-row-start: 1;">Order id</p>
-        <p style="grid-row-start: 2;">Customer Name</p>
-        <p style="grid-row-start: 3;">Date</p>
-        <p id="orderID" style="grid-row-start: 1; grid-column-start: 2;"></p>
-        <p id="customerName" style="grid-row-start: 2; grid-column-start: 2;"></p>
-        <p id="Date" style="grid-row-start: 3; grid-column-start: 2;"></p>
-      </div>
-      <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items</p>
-      <div style="width:98%; margin-left: auto; margin-right: auto;">
-        <table id="ordItemsTable" class="display">
           <thead>
             <th>Order id</th>
             <th>Customer Name</th>
@@ -150,6 +182,24 @@
           </tbody>
         </table>
       </div>
+      <!--overlay for order items-->
+     <div id="overlayOrdItems" class="overlayContainer">
+      <div class="overlayTopBar">
+        <span style="position:absolute; left: 20px;">Order Items</span>
+        <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeOrdItemsOL()">Back</span>
+      </div>
+      <div class="delOrderInfoGrid">
+        <p style="grid-row-start: 1;">Order id</p>
+        <p style="grid-row-start: 2;">Customer Name</p>
+        <p style="grid-row-start: 3;">Date</p>
+        <p id="orderID" style="grid-row-start: 1; grid-column-start: 2;"></p>
+        <p id="customerName" style="grid-row-start: 2; grid-column-start: 2;"></p>
+        <p id="Date" style="grid-row-start: 3; grid-column-start: 2;"></p>
+      </div>
+      <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items</p>
+      <div style="width:98%; margin-left: auto; margin-right: auto;">
+        <table id="ordItemsTable" class="display"> </table>
+      </div>
     </div>
-    <button onclick="openDelOL()" style="position: fixed; right:500px; top:500px">button</button>
+
 {% endblock %}

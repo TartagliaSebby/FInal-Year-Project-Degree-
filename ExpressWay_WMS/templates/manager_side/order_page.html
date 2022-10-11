@@ -8,7 +8,7 @@
 
 
 $(document).ready( function () {
-        $('#orderTable').DataTable({
+    var  orderTab = $('#orderTable').DataTable({
             select: 'single',
             data: {{orderTable_data|safe}},
             columns: [
@@ -19,29 +19,66 @@ $(document).ready( function () {
                 {title:'Placed Date'},
                 ]
         });
-        $('#orderItemsTable').DataTable();
+        $('#orderItemsTable').DataTable({
+          columns: [
+                {title:'No'},
+                {title:'Item Id'},
+                {title:'Name'},
+                {title:'Seller id'},
+                {title:'Quantity'},
+                ],
+                "searching":false,
+                "lengthChange": false,
+                paging:false,
+                "info":false
+        });
+        //event listeners
+        orderTab.on( 'select', function ( e, dt, type, indexes ) {
+          if(type=="row"){
+            //determine order_id of selected row
+              var order_id = orderTab.rows(indexes).data().pluck('0')[0];
+              //send post to server with order_id to receive data based on order_id
+              $.ajax({
+                url: '/orders',
+                type: "POST",
+                data: {"order_id":order_id},
+                dataType: "json",
+                success: function(data){
+                    openOL(data)
+                },
+                error: function(data){
+                  alert("failed")
+                }
+              });
+          }
+        });
         } );
 
-var tab = $('#orderTable').DataTable();
-         tab.on('select', function(e, dt, type, indexes){
-           var data = table.rows( indexes ).data().pluck( 'order id' );
-           alert(data);
-        })
+
+
+
+
 
 //overlay functions
-function openOL(){
+function openOL(data){
+        //open overlay
         document.getElementById("overlayOrder").style.width="100%";
-        //TEMP!!!!!!!!!!!!!!!
-        var tab = $('#orderTable').DataTable();
-         tab.on('select', function(e, dt, type, indexes){
-           var data = table.rows( indexes ).data().pluck( 'order id' );
-        })
+        //update overlay interface with data retrieved from post
+        var olData = data.overlay
+        var tableData = data.table
+        document.getElementById("orderID").textContent = olData.order_id;
+        document.getElementById("customerName").textContent = olData.customer_name;
+        document.getElementById("date").textContent = olData.placed_date;
+        document.getElementById("status").textContent = olData.order_status;
+        var tab = $('#orderItemsTable').DataTable();
+        tab.rows.add(tableData).draw();
+
+
       }
 function closeOL(){
         document.getElementById("overlayOrder").style.width="0";
-        //TEMP!!!!!!!!!!!!!!!!
+        //clear data table
         var tab = $('#orderItemsTable').DataTable();
-
         tab.clear().draw();
       }
 
@@ -73,10 +110,9 @@ function closeOL(){
       }
 .orderInfoGrid{
         display:grid;
-        width:98%;
+        width:1000px;
         min-width:1000px;
-        margin-left:auto;
-        margin-right: auto;
+        margin-left:20px;
         margin-bottom: 80px;
       }
 </style>
@@ -103,29 +139,19 @@ function closeOL(){
       <span style="position:absolute; left: 20px;">Order Items</span>
       <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeOL()">Back</span>
     </div>
-    <div class="orderInfoGrid">
-      <p style="grid-row-start: 1;">Order id</p>
-      <p style="grid-row-start: 2;">Customer Name</p>
-      <p style="grid-row-start: 3;">Date</p>
+    <p style="margin-left: 7px; margin-bottom: 5px; font-size: 1.5em; font-weight: 700;">Status: <span id = "status"></span></p>
+    <div class="orderInfoGrid"style="font-size:1.3em">
+      <p style="grid-row-start: 1;">Order id: </p>
+      <p style="grid-row-start: 2;">Customer Name:</p>
+      <p style="grid-row-start: 3;">Date:</p>
       <!--cells to be filled with data from database-->
       <p id="orderID" style="grid-row-start: 1; grid-column-start:2"></p>
       <p id="customerName" style="grid-row-start: 2; grid-column-start:2"></p>
       <p id="date" style="grid-row-start: 3; grid-row-end: 5; grid-column-start:2"></p>
-      <p style="grid-row-start: 1; grid-row-end: 2; grid-column-start:3; font-size: 1.5em; font-weight: 700;">Status: <span id = "status"></span></p>
+
     </div>
     <p style="margin-left:10px; font-size:1.5em; font-weight: 700; ">Items</p>
-    <table id="orderItemsTable" class="display">
-      <thead>
-        <th>No</th>
-        <th>Item Id</th>
-        <th>Name</th>
-        <th>Seller id</th>
-        <th>Quantity</th>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
+    <table id="orderItemsTable" class="display"></table>
   </div>
 
-  <button onclick="openOL()" style="position: fixed; right:500px; top:500px">button</button>
 {% endblock %}

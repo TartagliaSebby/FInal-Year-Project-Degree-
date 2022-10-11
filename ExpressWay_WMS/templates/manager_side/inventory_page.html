@@ -5,16 +5,71 @@
 {% block script %}
 <script>
  $(document).ready( function () {
-      $('#inventoryTable').DataTable();
-      $('#locationTable').DataTable({"searching":false});
-        } );
-      
-//overlay functions  
-function openOL(){
+  var invTab = $('#inventoryTable').DataTable({
+    select:'single',
+    data:{{invTable_data|safe}},
+    columns:[
+          {title:"Item id"},
+          {title:"Name"},
+          {title:"Seller id"},
+          {title:"Quantity"}
+        ]
+     });
+  $('#locationTable').DataTable({
+    "searching":false,
+    "lengthChange": false,
+    paging:false,
+    "info":false});
+
+  //event listeners
+  invTab.on('select', function ( e, dt, type, indexes ){
+    if(type=="row"){
+      var item_id = invTab.rows(indexes).data().pluck('0')[0];
+      $.ajax({
+                url: '/inventory',
+                type: "POST",
+                data: {"item_id":item_id},
+                dataType: "json",
+                success: function(data){
+                    openOL(data)
+                    //alert(JSON.stringify(data))
+                },
+                error: function(data){
+                  alert("failed")
+                }
+              });
+    }
+  }
+  )
+  } );
+
+//overlay functions
+function openOL(data){
   document.getElementById("overlayItems").style.width="100%";
+  //update overlay interface with data retrieved from post
+  var olData = data.overlay
+  var tableData = data.table
+  document.getElementById("overlayItems").style.width="100%";
+
+  document.getElementById("itemID").textContent =  olData.item_id
+  document.getElementById("sellerID").textContent = olData.seller_id
+  document.getElementById("weight").textContent = olData.weight
+  document.getElementById("desc").textContent = olData.item_desc
+  document.getElementById("itemName").textContent = olData.item_name
   //TEMP!!!!!!!!!!!!!!!
   var tab = $('#locationTable').DataTable();
-  tab.row.add([1,2,3,4,5,6,7]).draw(false);
+  var tableDataFinal = [];
+  var count=1;
+  //splits location into based types and add quantity to form array for data table
+  for (i=0; i<tableData.length;i++){
+    var rowArr = [count]
+    rowArr = rowArr.concat( tableData[i].location.split("-"))
+    rowArr.push(tableData[i].quantity)
+    tableDataFinal.push(rowArr)
+
+  }
+
+  tab.rows.add(tableDataFinal).draw();
       }
 function closeOL(){
   document.getElementById("overlayItems").style.width="0";
@@ -28,7 +83,7 @@ function closeOL(){
 
 {% block style %}
 <style>
-.overlayContainer{         
+.overlayContainer{
         height: 100%;
         width: 0;
         position:fixed;
@@ -40,21 +95,20 @@ function closeOL(){
         transition:0.4s;
       }
 .overlayTopBar{
-        display:flex; 
+        display:flex;
         align-items:center;
-        border-bottom: solid 1px; 
+        border-bottom: solid 1px;
         box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
-        min-height:35px; 
+        min-height:35px;
         font-size: 1.25em;
         font-weight: 700;
         margin-bottom: 15px;
       }
 .itemInfoGrid{
         display:grid;
-        width:98%;
+        width:1000px;
         min-width:1000px;
-        margin-left:auto;
-        margin-right: auto;  
+        margin-left:20px;
         margin-bottom: 80px;
       }
 </style>
@@ -65,18 +119,9 @@ function closeOL(){
         <div class="contentTopBar">
             <p class="contentTopBarText">Inventory</p>
         </div>
-      
+
         <!--table-->
-        <table id="inventoryTable" class="display">
-          <thead>
-            <th>Item id</th>
-            <th>Name</th>
-            <th>Seller id</th>
-            <th>Quantity</th>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
+        <table id="inventoryTable" class="display"></table>
       </div>
 {% endblock%}
 
@@ -87,11 +132,10 @@ function closeOL(){
         <span style="position:absolute; left: 20px;">Item Information</span>
         <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeOL()">Back</span>
       </div>
-      <div style="display:flex">
-          <p id="itemName"></p>
-          <p style="position:absolute; right:20px">Quantity: <span id="itemQuantity"></span></p>
+      <div >
+          <p id="itemName" style="font-size: 1.5em;font-weight:700;margin-left:10px; margin-top:10px"></p>
       </div>
-      <div class="itemInfoGrid">
+      <div class="itemInfoGrid" style="font-size:1.3em;">
         <p style="grid-row-start: 1;">Item id</p>
         <p style="grid-row-start: 2;">Seller id</p>
         <p style="grid-row-start: 3;">Weight per Unit</p>

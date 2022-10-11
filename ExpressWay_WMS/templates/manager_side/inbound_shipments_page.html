@@ -2,33 +2,75 @@
 
 {% block title %} Inbound Shipments {% endblock %}
 
-{% block script %} 
+{% block script %}
 <script>
 $(document).ready( function () {
-        $('#inShipmentTable').DataTable();
-        $('#shippedTable').DataTable({"searching":false});
-        } );
+        var inShipTab = $('#inShipmentTable').DataTable({
+          select:'single',
+          data:{{inShipmentData|safe}},
+          columns:[
+            {title:"Shipment No"},
+            {title:"Seller Name"},
+            {title:"Shipment Type"},
+            {title:"Date"},
+            {title:"Time"},
+            {title:"Status"}
+          ]
+        });
+        $('#shippedTable').DataTable({"searching":false,
+           "lengthChange": false,
+           paging:false,
+           "info":false});
+           //event listeners
+          inShipTab.on('select', function ( e, dt, type, indexes ){
+            if(type=="row"){
+              var asn_id = inShipTab.rows(indexes).data().pluck('0')[0];
+              $.ajax({
+                url: '/inbound_shipments',
+                type: "POST",
+                data: {"asn_id":asn_id},
+                dataType: "json",
+                success: function(data){
+                    openOL(data)
 
-//overlay functions  
-function openOL(){
-      document.getElementById("overlayASN").style.width="100%";
-      //TEMP!!!!!!!!!!!!!!!
-      var tab = $('#orderItemsTable').DataTable();
-      tab.row.add([1,2,3,4,5]).draw(false);
+                },
+                error: function(data){
+                  alert("failed")
+                }
+              });
+            }
+        });
+        });
+
+//overlay functions
+function openOL(data){
+        document.getElementById("overlayASN").style.width="100%";
+        //update overlay interface with data retrieved from post
+        var olData = data.overlay
+        var tableData = data.table
+        document.getElementById("shipmentNo").textContent = olData.shipment_no
+        document.getElementById("sellerID").textContent = olData.seller_id
+        document.getElementById("sellerName").textContent = olData.seller_name
+        document.getElementById("shipmentType").textContent = olData.shipment_type
+        document.getElementById("arrivalTime").textContent = olData.time
+        document.getElementById("arrivalDate").textContent = olData.date
+
+        var tab = $('#shippedTable').DataTable();
+        tab.rows.add(tableData).draw();
     }
 function closeOL(){
         document.getElementById("overlayASN").style.width="0";
         //TEMP!!!!!!!!!!!!!!!!
-        var tab = $('#orderItemsTable').DataTable();
+        var tab = $('#shippedTable').DataTable();
         tab.clear().draw();
       }
 </script>
- 
+
 {% endblock %}
 
 {% block style %}
 <style>
-.overlayContainer{         
+.overlayContainer{
         height: 100%;
         width: 0;
         position:fixed;
@@ -40,11 +82,11 @@ function closeOL(){
         transition:0.4s;
       }
 .overlayTopBar{
-        display:flex; 
+        display:flex;
         align-items:center;
-        border-bottom: solid 1px; 
+        border-bottom: solid 1px;
         box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
-        min-height:35px; 
+        min-height:35px;
         font-size: 1.25em;
         font-weight: 700;
         margin-bottom: 15px;
@@ -54,34 +96,22 @@ function closeOL(){
         width:98%;
         min-width:1000px;
         margin-left:auto;
-        margin-right: auto;  
+        margin-right: auto;
         margin-bottom: 80px;
       }
 </style>
 
 {% endblock %}
 
-{% block content%} 
+{% block content%}
 <div style="display:flex; flex-direction: column;">
         <div class="contentTopBar">
             <p class="contentTopBarText">Inbound Shipments</p>
             <p class="contentTopBarText contentTopBarButton">Import </p>
         </div>
-      
+
         <!--table-->
-        <table id="inShipmentTable" class="display">
-          <thead>
-            <th>Shipment No</th>
-            <th>Seller id</th>
-            <th>Seller Name</th>
-            <th>Shipment Type</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Status</th>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
+        <table id="inShipmentTable" class="display"></table>
       </div>
 {% endblock %}
 
