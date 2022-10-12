@@ -1,10 +1,12 @@
 from flask import Flask, redirect, url_for, render_template, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text,select
-from ExpressWay_WMS.database import orders, customer, item_location,item, seller,asn, asn_items, receive_discrepancies, order_item, delivery, employee,Instructions ,pick_list, shift
+from ExpressWay_WMS.database import orders, customer, item_location,item, seller,asn, asn_items, receive_discrepancies, order_item, delivery, employee,instruction ,pick_list, shift
 from ExpressWay_WMS.database import db
 from sqlalchemy.engine.row import LegacyRow
 import json
+
+from symbol import parameters
 
 
 
@@ -42,40 +44,34 @@ def login_page():
 """""
 @app.route("/", methods = ['POST', 'GET'])
 def main():
-    if request.method =="GET":
-        with engine.connect() as connection:
-            query = connection.execute(text('SELECT d.delivery_id, d.vehicle_num FROM orders o, delivery d WHERE o.order_id = d.order_id')).all()
-        strResults = stringify(query) if len(query) !=  0  else []
-        return render_template("manager_side/deliveries_page.html", deliveryData =strResults)
-    elif request.method == "POST":
-        if request.form["table"] == "del_orders":
-            delid = request.form["del_id"]
-            with engine.connect() as connection:
-                overlayL = db.session.execute( select(delivery.delivery_id,delivery.vehicle_num,delivery.time).where(delivery.delivery_id == delid)).all()
-                tableL = db.session.execute(select(delivery.order_id, customer.name, delivery.vehicle_num).where(delivery.order_id == orders.order_id).where(customer.customer_id == orders.customer_id).where(delivery.delivery_id==delid)).all()
-            overlayRow = overlayL[0]
-            overlayData = {"del_id":overlayRow.delivery_id, "vehicle_num":overlayRow.vehicle_num, "time":str(overlayRow.time)}
-            del_list = []
-            for itemdata in tableL:
-                row = [itemdata.order_id,itemdata.name, itemdata.vehicle_num]
-                del_list.append(row)
-            return jsonify({"overlay":overlayData, "table":del_list})
-        elif request.form["table"] == "del_ord_items":
-            delordid = request.form["del_ord_id"]
-            with engine.connect() as connection:
-                overlayL = db.session.execute(select(orders.order_id, customer.name, delivery.date).where(orders.customer_id == customer.customer_id).where(delivery.order_id == orders.order_id).where(orders.order_id == delordid)).all()
-                tableL = db.session.execute(select(item.item_id, item.item_name, seller.seller_name, order_item.quantity).where(item.item_id == order_item.item_id).where(item.seller_id == seller.seller_id).where(order_item.order_id == delordid)).all()
-            overlayRow = overlayL[0]
-            overlayData = {"ord_id":overlayRow.order_id, "cust_name":overlayRow.name, "date":str(overlayRow.date)}
-            del_ord_item_list = []
-            count = 1
-            for itemdata in tableL:
-                row = [str(count),itemdata.item_id, itemdata.item_name, itemdata.seller_name, itemdata.quantity]
-                del_ord_item_list.append(row)
-                count+=1
+    if request.method == "GET":
+        return render_template("manager_side/job_assignment_page.html")
 
-            return jsonify({"overlay":overlayData,"table":del_ord_item_list})
+    if request.method =="POST":
+        if "jobTab" in request.form:
+            with engine.connect() as connection:
+                query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id ORDER BY e.emp_id;")).all()
+            strResults= []
+            if len(stringify(query)) != 0:
+                for row in stringify(query):
+                    for i in range (2,4,1):
+                        if(row[i]=="None"):
+                            row[i] = "-"
+                    strResults.append(row)
+            return (jsonify({"data":strResults}))
+        elif "update" in request.form:
 
+            with engine.connect() as connection:
+                emp_id = db.session.execute(select(employee.emp_id).where(employee.emp_id == instruction.emp_id).where(employee.emp_id == request.form["data[emp_id]"])).all()
+
+            if len(emp_id)==0:
+                instructions = instruction(emp_id = request.form["data[emp_id]"], task=request.form["data[task]"],station =request.form["data[station]"],instructions =request.form["data[instruction]"])
+                db.session.add(instructions)
+                db.session.commit()
+
+            return ("s")
+            #else:
+             #   with engine.connect as connection:
 
 
 
@@ -188,18 +184,49 @@ def receive_discrepancy_page():
 
 @app.route("/deliveries", methods = ['POST', 'GET'])
 def delivery_page():
-    with engine.connect() as connection:
-        query = connection.execute(text('SELECT o.order_id, d.delivery_id, d.vehicle_num FROM orders o, delivery d where 7=0')).all()
-    strResults = stringify(query) if len(query) !=  0  else []
-    return render_template("manager_side/deliveries_page.html", deliveryData =strResults)
+    if request.method =="GET":
+        with engine.connect() as connection:
+            query = connection.execute(text('SELECT d.delivery_id, d.vehicle_num FROM orders o, delivery d WHERE o.order_id = d.order_id')).all()
+        strResults = stringify(query) if len(query) !=  0  else []
+        return render_template("manager_side/deliveries_page.html", deliveryData =strResults)
+    elif request.method == "POST":
+        if request.form["table"] == "del_orders":
+            delid = request.form["del_id"]
+            with engine.connect() as connection:
+                overlayL = db.session.execute( select(delivery.delivery_id,delivery.vehicle_num,delivery.time).where(delivery.delivery_id == delid)).all()
+                tableL = db.session.execute(select(delivery.order_id, customer.name, delivery.vehicle_num).where(delivery.order_id == orders.order_id).where(customer.customer_id == orders.customer_id).where(delivery.delivery_id==delid)).all()
+            overlayRow = overlayL[0]
+            overlayData = {"del_id":overlayRow.delivery_id, "vehicle_num":overlayRow.vehicle_num, "time":str(overlayRow.time)}
+            del_list = []
+            for itemdata in tableL:
+                row = [itemdata.order_id,itemdata.name, itemdata.vehicle_num]
+                del_list.append(row)
+            return jsonify({"overlay":overlayData, "table":del_list})
+        elif request.form["table"] == "del_ord_items":
+            delordid = request.form["del_ord_id"]
+            with engine.connect() as connection:
+                overlayL = db.session.execute(select(orders.order_id, customer.name, delivery.date).where(orders.customer_id == customer.customer_id).where(delivery.order_id == orders.order_id).where(orders.order_id == delordid)).all()
+                tableL = db.session.execute(select(item.item_id, item.item_name, seller.seller_name, order_item.quantity).where(item.item_id == order_item.item_id).where(item.seller_id == seller.seller_id).where(order_item.order_id == delordid)).all()
+            overlayRow = overlayL[0]
+            overlayData = {"ord_id":overlayRow.order_id, "cust_name":overlayRow.name, "date":str(overlayRow.date)}
+            del_ord_item_list = []
+            count = 1
+            for itemdata in tableL:
+                row = [str(count),itemdata.item_id, itemdata.item_name, itemdata.seller_name, itemdata.quantity]
+                del_ord_item_list.append(row)
+                count+=1
+            return jsonify({"overlay":overlayData,"table":del_ord_item_list})
 
 @app.route("/job_assignment", methods = ['POST', 'GET'])
 def job_assigment_page():
     return render_template("manager_side/job_assignment_page.html")
 
-@app.route("/employees")
+@app.route("/employees", methods =["GET"])
 def employee_page():
-    return render_template("manager_side/employee_page.html")
+        with engine.connect() as connection:
+            query = connection.execute(text('SELECT emp_id, name, email, phone_no FROM employee')).all()
+        strResults = stringify(query) if len(query) !=  0  else []
+        return render_template("manager_side/employee_page.html", employeeData =strResults)
 
 @app.route("/pick_pack_assignment")
 def pick_pack_assignment_page():
@@ -248,10 +275,7 @@ def stringify(List):
            result.append(str(item))
     return result
 
-@app.route('/postSimple', methods=['POST'])
-def get_simple_js():
-    simpleJsData = request.form['simpleJsData']
-    return simpleJsData
+
 
 
 if(__name__) == "__main__":

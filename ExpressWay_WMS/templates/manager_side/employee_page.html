@@ -5,7 +5,10 @@
 {% block script%}
 <script>
 $(document).ready( function () {
-        $('#employeeTable').DataTable();
+        $('#employeeTable').DataTable({
+          data:{{employeeData|safe}}
+        }
+        );
          } );
 </script>
 {% endblock %}

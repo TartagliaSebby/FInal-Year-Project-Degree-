@@ -53,3 +53,16 @@ SELECT delivery.order_id, customer.name, delivery.vehicle_num
 FROM delivery, customer, orders
 WHERE delivery.order_id = orders.order_id
 AND customer.customer_id = orders.customer_id
+
+--table for job assignment page 
+SELECT e.emp_id, e.name, i.task, i.station
+FROM employee e, instructions i 
+WHERE e.emp_id =i.emp_id
+and e.emp_id in (SELECT emp_id FROM employee WHERE present = 1);
+
+--job assignment page table
+SELECT e.emp_id, e.name, i.task, i.station
+FROM employee e
+LEFT OUTER JOIN instructions i ON e.emp_id = i.emp_id
+ORDER BY e.emp_id;
+

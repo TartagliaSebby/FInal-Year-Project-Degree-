@@ -95,7 +95,7 @@ class employee(db.Model):
     password = db.Column(db.String(16), nullable=False)
     present = db.Column(mysql.BOOLEAN)
 
-class Instructions(db.Model):
+class instruction(db.Model):
     emp_id = db.Column(mysql.INTEGER(4), db.ForeignKey(employee.emp_id), primary_key = True)
     instructions = db.Column(db.String(200))
     task =  db.Column(db.String(20))

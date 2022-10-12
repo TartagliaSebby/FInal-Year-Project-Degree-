@@ -38,7 +38,7 @@
       if(type=="row"){
         var del_id = delTab.rows(indexes).data().pluck('0')[0];
         $.ajax({
-                url: '/',
+                url: '/deliveries',
                 type: "POST",
                 data: {"del_id":del_id, "table":"del_orders"},
                 dataType: "json",
@@ -55,7 +55,7 @@
       if(type=="row"){
         var del_id = delOrdTab.rows(indexes).data().pluck('0')[0];
         $.ajax({
-                url: '/',
+                url: '/deliveries',
                 type: "POST",
                 data: {"del_ord_id":del_id, "table":"del_ord_items"},
                 dataType: "json",
@@ -201,5 +201,4 @@
         <table id="ordItemsTable" class="display"> </table>
       </div>
     </div>
-
 {% endblock %}

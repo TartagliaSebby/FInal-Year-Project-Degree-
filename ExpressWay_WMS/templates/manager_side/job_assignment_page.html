@@ -6,30 +6,191 @@
 <script>
 //initialise table when page is ready
 $(document).ready( function () {
-  $('#jobTable').DataTable();
+  var jobTab = $('#jobTable').DataTable({
+    select:'single',
+    //data:{{available_emp|safe}},
+    columns:[
+      {title:"Employee id"},
+      {title:"Name"},
+      {title:"Assigned Job"},
+      {title:"Station"}
+    ],
+    "ajax":{
+      "data": {"jobTab":"jobTab"} ,
+      "url": "/",
+      "type":"Post",
+      "datasrc": ""
+    }
+  });
+  //event listeners
+  jobTab.on("select", function( e, dt, type, indexes ){
+    if (type == "row"){
+      var emp_id = jobTab.rows(indexes).data().pluck('0')[0];
+      var emp_name = jobTab.rows(indexes).data().pluck('1')[0];
+      openOL(emp_name, emp_id);
+    }
+  })
       } );
+
+//reload table data every few seconds
+/*setInterval( function(){
+  $('#jobTable').DataTable().ajax.reload(null, false);
+}, 5000);*/
+function openOL(emp_name, emp_id){
+  document.getElementById("overlay").style.width="450px";
+  document.getElementById("overlay").style.height="210px";
+  document.getElementById("backButton").style.width="100%";
+  document.getElementById("overlay").style.top="200px";
+  document.getElementById("emp_name").textContent=emp_name;
+  $("#emp_name").data('empid',emp_id);
+}
+function closeOL(){
+  //update display in webpage
+  document.getElementById("overlay").style.width="0";
+  document.getElementById("overlay").style.height="0";
+  document.getElementById("overlay").style.top="-5px";
+  document.getElementById("backButton").style.width="0%";
+   //send update to server
+  taskDD = document.getElementById("task");
+  stationDD = document.getElementById("station");
+  if(taskDD.value != "default" ){
+    emp_id = $("#emp_name").data('empid');
+    $("#emp_name").data('empid',"");
+    instruction = document.getElementById("instField").value;
+    selectedTask = taskDD.value;
+    selectedStation = stationDD.value;
+    //selectedPara = [emp_id, selectedTask, selectedStation, instruction];
+    selectedPara ={"emp_id": emp_id, "task":selectedTask,"station":selectedStation,"instruction":instruction};
+    alert(selectedPara);
+    $.ajax({
+      url: '/',
+      type: "POST",
+      data: {"update":"update","data": selectedPara},
+      dataType: "text",
+      //contentType: "application/json",
+      complete: function(data){
+          //alert("works");
+        alert(JSON.stringify(data));
+      },
+      error: function(data){
+        alert("failed");
+        }
+    })
+    taskDD.value ="default";
+    $("#station").empty();
+  }
+}
+// functions for controling the options in the station drop down box
+function changeOptions(){
+  $("#station").empty();
+  if(event.target.value == "picking" || event.target.value == "packing"){
+    $('#station').append($('<option>').val('packing 1').text('Packing 1'));
+    $('#station').append($('<option>').val('packing 2').text('Packing 2'));
+    $('#station').append($('<option>').val('packing 3').text('Packing 3'));
+    $('#station').append($('<option>').val('packing 4').text('Packing 4'));
+  }
+  else if(event.target.value == "receiving"){
+    $('#station').append($('<option>').val('dock 1').text('Dock 1'));
+    $('#station').append($('<option>').val('dock 2').text('Dock 2'));
+  }
+  else if(event.target.value == "loading"){
+    $('#station').append($('<option>').val('dock 3').text('Dock 3'));
+    $('#station').append($('<option>').val('dock 4').text('Dock 4'));
+    $('#station').append($('<option>').val('dock 5').text('Dock 5'));
+  }
+
+}
+
 </script>
 {% endblock %}
 
+{%block style%}
+<style>
+    a{
+        color:inherit;
+        text-decoration:none;
+    }
+    .overlayContainer{
+      height: 210px;
+      width:400px;
+      position: absolute;
+      right:700px;
+      top:200px;
+      overflow-x: hidden;
+      z-index:6;
+      border-radius:10px;
+      background-color: aliceblue;
+      border: ridge 2px black;
+    }
+    #backButton{
+      height: 100%;
+      width:100%;
+      background-color: transparent;
+      cursor:pointer;
+      z-index: 5;
+      position:fixed;
+      top:0px;
+      left:0px;
+    }
+</style>
+{%endblock%}
 
 
 {% block content %}
+{{json}}
 <div style="display:flex; flex-direction: column;">
       <div class="contentTopBar">
           <p class="contentTopBarText">Job Assignment</p>
       </div>
-    
+
       <!--table-->
-      <table id="jobTable" class="display">
-        <thead>
-          <th>Employee id</th>
-          <th> Name</th>
-          <th>Assigned Job</th>
-          <th>Station</th>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+      <table id="jobTable" class="display"></table>
       <button style="align-self: flex-end; margin-top:20px; width:110px; height: 30px;" ><a href="/pick_pack_assignment">Assign Jobs</a></button>
-    </div>
+</div>
 {% endblock%}
+
+{% block externalContent %}
+<!--overlay for assigning jobs and stations-->
+<div class="overlayContainer" id="overlay">
+  <div style ="display: flex; align-content:center; margin:10px">
+    <table>
+      <thead>
+        <th style="width:180px;">Employee</th>
+        <th>Task</th>
+        <th>Station</th>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="emp_name" style="text-align:center" data-empid =""></td>
+          <td>
+            <select onchange="changeOptions()" style = "width:100px; height:30px ; justify-self:flex-start" id="task">
+              <option value ="default"></option>
+              <option value = "picking">Picking</option>
+              <option value = "packing">Packing</option>
+              <option value = "receiving">Receiving</option>
+              <option value = "loading">Loading</option>
+            </select>
+          </td>
+          <td>
+            <select id="station" style = "width:100px; height:30px; justify-self:flex-end;" id="station" >
+            </select>
+          </td>
+          <tr style="height:10px"></tr>
+        </tr>
+        <tr>
+          <td colspan ="3">Instructions to worker</td>
+        </tr>
+        <tr>
+          <td colspan = "3">
+            <textarea name="instructions" id="instField" cols="50" rows="4"></textarea>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<!--close the overlay by clicking outside the overlay-->
+<div onclick="closeOL()" id="backButton" ></div>
+
+{% endblock %}
