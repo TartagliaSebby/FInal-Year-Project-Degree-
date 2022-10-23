@@ -66,3 +66,120 @@ FROM employee e
 LEFT OUTER JOIN instructions i ON e.emp_id = i.emp_id
 ORDER BY e.emp_id;
 
+--pick pack assignment pending order table
+SELECT o.order_id, SUM(oi.quantity) as items, placed_date
+FROM orders o, order_item oi
+WHERE o.order_id = oi.order_id
+AND o.order_status = 'pending'
+Group BY o.order_id;
+
+--pick pack assignment available employees
+SELECT e.emp_id, e.name, i.task, i.station
+FROM employee e, instruction i
+WHERE e.emp_id = i.emp_id
+
+SELECT e.emp_id, e.name, i.task, i.station
+FROM employee e
+LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id
+WHERE e.present = 1;
+
+--data for genetic algorithm
+--!for object creator
+--order
+SELECT order_id, item_id, quantity
+FROM order_item
+WHERE order_id IN ({})
+ORDER BY order_id;
+
+--inventory before becoming a dictionary
+SELECT item_id, location, quantity
+FROM order_item oi, item_location il
+WHERE oi.item_id = il.item_id
+AND oi.order_id IN ({})
+
+
+
+/*
+SELECT oi.order_id, oi.item_id, il.location FROM order_item oi, item_location il WHERE oi.item_id = il.item_id AND oi.item_id in(SELECT DISTINCT il.item_id FROM FROM order_item oi, item_location il WHERE oi.item_id = il.item_id AND oi.order_id in(712312 ,789210)) ORDER BY oi.order_id;
+query = "SELECT oi.order_id, oi.item_id, il.location FROM order_item oi, item_location il WHERE oi.item_id = il.item_id AND oi.item_id in(SELECT DISTINCT il.item_id FROM FROM order_item oi, item_location il WHERE oi.item_id = il.item_id AND oi.order_id in({})) ORDER BY oi.order_id;".format(ord_ids)
+query = """SELECT oi.order_id, oi.item_id, il.location 
+        FROM order_item oi, item_location il 
+        WHERE oi.item_id = il.item_id 
+        AND oi.item_id in(
+            SELECT DISTINCT il.item_id FROM FROM order_item oi, item_location il WHERE oi.item_id = il.item_id AND oi.order_id in({})) ORDER BY oi.order_id;""".format(ord_ids)
+*/
+
+
+
+
+-- query to see if there is sufficient quantity of items
+--query for the quantity of items available 
+SELECT il.item_id, SUM(il.quantity) AS inv_quantity
+FROM item_location il
+WHERE il.item_id IN(102943,107832 )
+GROUP BY il.item_id
+ORDER BY il.item_id
+
+
+
+--query for the quantity of items needed to fulfil orders
+SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
+FROM order_item oi, orders o
+WHERE oi.order_id = o.order_id
+AND oi.order_id IN(700120, 701293)
+GROUP BY oi.item_id
+ORDER BY oi.item_id;
+
+SELECT inv.item_id, inv_quantity, ord_quantity
+FROM (
+    SELECT il.item_id, SUM(il.quantity) AS inv_quantity
+FROM item_location il
+WHERE il.item_id IN(102943,107832 )
+GROUP BY il.item_id
+ORDER BY il.item_id
+) as inv, (
+    SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
+FROM order_item oi, orders o
+WHERE oi.order_id = o.order_id
+AND oi.order_id IN(700120, 701293)
+GROUP BY oi.item_id
+ORDER BY oi.item_id
+) AS ord
+WHERE inv.item_id = ord.item_id
+
+
+
+
+SELECT inv.item_id, inv_quantity, ord_quantity
+FROM (
+    SELECT il.item_id, SUM(il.quantity) AS inv_quantity
+FROM item_location il
+WHERE il.item_id IN(102943,107832 )
+GROUP BY il.item_id
+ORDER BY il.item_id
+) as inv, (
+    SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
+FROM order_item oi, orders o
+WHERE oi.order_id = o.order_id
+AND oi.order_id IN(700120, 701293)
+GROUP BY oi.item_id
+ORDER BY oi.item_id
+) AS ord
+WHERE inv.item_id = ord.item_id
+
+SELECT ord.item_id,  ord_quantity, inv_quantity
+FROM (
+    SELECT il.item_id, SUM(il.quantity) AS inv_quantity
+    FROM item_location il
+    WHERE il.item_id IN(102943,107832 )
+    GROUP BY il.item_id
+    ORDER BY il.item_id
+) inv RIGHT OUTER JOIN (
+    SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
+    FROM order_item oi, orders o
+    WHERE oi.order_id = o.order_id
+    AND oi.order_id IN(700120, 701293)
+    GROUP BY oi.item_id
+    ORDER BY oi.item_id
+) ord
+ON ord.item_id = inv.item_id;

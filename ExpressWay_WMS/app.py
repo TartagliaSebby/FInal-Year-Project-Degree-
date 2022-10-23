@@ -1,12 +1,11 @@
 from flask import Flask, redirect, url_for, render_template, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text,select
+from sqlalchemy import text,select,delete, update
 from ExpressWay_WMS.database import orders, customer, item_location,item, seller,asn, asn_items, receive_discrepancies, order_item, delivery, employee,instruction ,pick_list, shift
 from ExpressWay_WMS.database import db
 from sqlalchemy.engine.row import LegacyRow
 import json
 
-from symbol import parameters
 
 
 
@@ -27,11 +26,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 engine = db.create_engine(SQLALCHEMY_DATABASE_URI,{})
 
-"""
-from sqlalchemy.orm import Session, sessionmaker
-Session = sessionmaker()
-session = Session.configure(bind=engine)
-"""
+
 db.init_app(app)
 with app.app_context():
     db.create_all()
@@ -44,38 +39,68 @@ def login_page():
 """""
 @app.route("/", methods = ['POST', 'GET'])
 def main():
-    if request.method == "GET":
-        return render_template("manager_side/job_assignment_page.html")
+    if request.method =="GET":
+        return render_template("manager_side/pick_pack_assignment_page.html")
 
-    if request.method =="POST":
-        if "jobTab" in request.form:
+    elif request.method =="POST":
+        #requests for table data
+        if "table_data_req" in request.form:
+            if request.form["table_data_req"] =="pending_orders":
+                with engine.connect() as connection:
+                    query = connection.execute(text("SELECT o.order_id, SUM(oi.quantity) as items, placed_date FROM orders o, order_item oi WHERE o.order_id = oi.order_id AND o.order_status = 'pending' Group BY o.order_id;")).all()
+                strResults= query
+                if len(strResults) == 0:
+                    strResults = []
+                return (jsonify({"data":stringify(strResults)}))
+
+            elif request.form["table_data_req"] == "available_emp":
+                with engine.connect() as connection:
+                    query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id WHERE e.present = 1;")).all()
+                strResults= []
+                if len(stringify(query)) != 0:
+                    for row in stringify(query):
+                        for i in range (2,4,1):
+                            if(row[i]=="None"):
+                                row[i] = "-"
+                        strResults.append(row)
+                return(jsonify({"data":strResults}))
+        #request for generating pick list
+        if "pick_pack_para" in request.form:
+            #check if inventory has enough items to fulfil order
+            selectedOrders = request.form["ord_id"]
+            selectedOrdersString = str(selectedOrders)
             with engine.connect() as connection:
-                query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id ORDER BY e.emp_id;")).all()
-            strResults= []
-            if len(stringify(query)) != 0:
-                for row in stringify(query):
-                    for i in range (2,4,1):
-                        if(row[i]=="None"):
-                            row[i] = "-"
-                    strResults.append(row)
-            return (jsonify({"data":strResults}))
-        elif "update" in request.form:
-
-            with engine.connect() as connection:
-                emp_id = db.session.execute(select(employee.emp_id).where(employee.emp_id == instruction.emp_id).where(employee.emp_id == request.form["data[emp_id]"])).all()
-
-            if len(emp_id)==0:
-                instructions = instruction(emp_id = request.form["data[emp_id]"], task=request.form["data[task]"],station =request.form["data[station]"],instructions =request.form["data[instruction]"])
-                db.session.add(instructions)
-                db.session.commit()
-
-            return ("s")
-            #else:
-             #   with engine.connect as connection:
-
-
-
-
+                ord_inv_list = connection.execute(text("""
+                    SELECT ord.item_id,  ord_quantity, inv_quantity
+                    FROM (
+                        SELECT il.item_id, SUM(il.quantity) AS inv_quantity
+                        FROM item_location il
+                        WHERE il.item_id IN({})
+                        GROUP BY il.item_id
+                        ORDER BY il.item_id
+                    ) inv 
+                    RIGHT OUTER JOIN (
+                        SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
+                        FROM order_item oi, orders o
+                        WHERE oi.order_id = o.order_id
+                        AND oi.order_id IN({})
+                        GROUP BY oi.item_id
+                        ORDER BY oi.item_id
+                    ) ord
+                    ON ord.item_id = inv.item_id;
+                """.format(selectedOrdersString[1:-1],selectedOrdersString[1:-1]))). all()
+            insufItems =[]
+            for ord_inv in ord_inv_list:
+                item_id =  ord_inv.item_id
+                if str(ord_inv.inv_quantity) == "NONE":
+                    insufItems.append(item_id)
+                    fulfilable = False
+                if ord_inv.ord_quantity > ord_inv.inv_quantity:
+                    insufItems.append(item_id)
+                    fulfilable = False
+            if not fulfilable:
+                return {"insufficient_items":str(insufItems)}
+            return (str(ord_inv_list))
 
 
 # manager side pages
@@ -219,7 +244,39 @@ def delivery_page():
 
 @app.route("/job_assignment", methods = ['POST', 'GET'])
 def job_assigment_page():
-    return render_template("manager_side/job_assignment_page.html")
+    if request.method == "GET":
+        return render_template("manager_side/job_assignment_page.html")
+
+    if request.method =="POST":
+        #allows job table to update data periodically
+        if "jobTab" in request.form:
+            #shows employees with and without instructions (employees without instructions have "-" in their tasks and )
+            with engine.connect() as connection:
+                query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id WHERE e.position= 'worker' ORDER BY e.emp_id;")).all()
+            strResults= []
+            if len(stringify(query)) != 0:
+                for row in stringify(query):
+                    for i in range (2,4,1):
+                        if(row[i]=="None"):
+                            row[i] = "-"
+                    strResults.append(row)
+            return (jsonify({"data":strResults}))
+
+        elif "update" in request.form:
+            #adds a new instruction row to the database if there isnt one
+            with engine.connect() as connection:
+                instructionRows = db.session.query(instruction).filter(instruction.emp_id == request.form["data[emp_id]"]).all()
+            if len(instructionRows)!=0:
+                db.session.execute(delete(instruction).where(instruction.emp_id ==request.form["data[emp_id]"] ))
+            instructions = instruction(emp_id = request.form["data[emp_id]"], task=request.form["data[task]"],station =request.form["data[station]"],instructions =request.form["data[instruction]"])
+            db.session.add(instructions)
+            db.session.commit()
+            return ("s")
+        elif "delete" in request.form:
+            db.session.execute(delete(instruction).where(instruction.emp_id ==request.form["emp_id"] ))
+            db.session.commit()
+            return(str(request.form))
+
 
 @app.route("/employees", methods =["GET"])
 def employee_page():

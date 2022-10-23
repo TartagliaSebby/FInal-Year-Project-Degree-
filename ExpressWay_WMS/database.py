@@ -1,5 +1,5 @@
 from turtle import position
-from flask import Blueprint, render_template
+from flask import Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects import mysql

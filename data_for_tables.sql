@@ -94,6 +94,8 @@ insert into employee values(8005,"Tan Hong Kai", "Hong@gmail.com", "018-9832940"
 insert into employee values(8006,"Kumar radesh", "Kumar@gmail.com","014-5741923","worker","asdf",1);
 insert into employee values(8007, "Kevin Space","Kevin@gmail.com","018,8829021","worker","asdf",1);
 insert into employee values(8008,"Shawn Kevin","shawn@gmail.com", "015-2430187","worker","asdf",1);
+insert into employee values(8009,"John Nathan","John@gmail.com", '012-2345587',"worker","asdf",1);
+
 
 #instruction table
 insert into instructions values(8001, "", "receiving", "Dock 1");

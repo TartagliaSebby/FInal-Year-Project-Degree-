@@ -3,24 +3,54 @@
 {% block title %} Pick Pack Assignment {% endblock %}
 
 {% block script %}
-<link type="text/css" href="//gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/css/dataTables.checkboxes.css" rel="stylesheet" />
-<script type="text/javascript" src="../../external_libraries/DataTablesCheckbox/dataTables.checkboxes.min.js"></script>
 <script>
 //initialise tables when document is ready
 $(document).ready( function () {
           $('#pendingOrderTable').DataTable({
-            'columnDefs' : [{
-              'targets':0,
-              'checkboxes':{
-                'selectRow':true
-              }
-            }
-            ],
             select: 'multi',
-            'order':[[1,'asc']]
-        }); 
-        $('#selectEmpTable').DataTable();
-        $('#selectVecTable').DataTable();
+            "lengthChange": false,
+            columns:[
+              {title:"Order id"},
+              {title:"Num of Items"},
+              {title:"Placed Date"},
+            ],
+            "ajax":{
+              "data": {"table_data_req":"pending_orders"} ,
+              "url": "/",
+              "type":"Post",
+              "datasrc": ""
+            },
+            drawCallback: function(){
+                    var api =  $('#pendingOrderTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i< 10 - rows; i++){
+                        $('#pendingOrderTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td></tr>"));
+                    }
+                }
+        });
+        $('#selectEmpTable').DataTable({
+          select: "multi",
+          "bAutoWidth": false,
+          columns:[
+            {title:"Employee id"},
+            {title:"Name"},
+            {title:"Assigned Job"},
+            {title:"Packing Station"}
+          ],
+          "ajax":{
+              "data": {"table_data_req":"available_emp"} ,
+              "url": "/",
+              "type":"Post",
+              "datasrc": ""
+            },
+          drawCallback: function(){
+                    var api =  $('#selectEmpTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i< 10 - rows; i++){
+                        $('#selectEmpTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                    }
+                }
+        });
       })
        /*scripts for moving between steps for job assignment */
       //global variables
@@ -29,16 +59,16 @@ $(document).ready( function () {
       var currentStep = 0;
       //initialises the stepIndicator list when page finishes loading
       window.onload= function(){
-        stepIndicatorList = [document.getElementById("orderInd"), document.getElementById("employeeInd"), document.getElementById("vehicleInd")];  
-        overlayList=[document.getElementById("overlayPendingOrd"),document.getElementById("overlaySelectEmp"),document.getElementById("overlaySelectVec")]
+        stepIndicatorList = [document.getElementById("orderInd"), document.getElementById("employeeInd")];
+        overlayList=[document.getElementById("overlayPendingOrd"),document.getElementById("overlaySelectEmp")];
       }
 
       function nextStep(){
-        stepIndicatorList[currentStep].style.fill = "rgb(118, 246, 118)"
-        stepIndicatorList[currentStep+1].style.fill ="rgb(255, 229, 63)"
-        overlayList[currentStep].style.width ="0%"
-        overlayList[currentStep+1].style.width ="100%"
-        currentStep += 1
+        stepIndicatorList[currentStep].style.fill = "rgb(118, 246, 118)";
+        stepIndicatorList[currentStep+1].style.fill ="rgb(255, 229, 63)";
+        overlayList[currentStep].style.width ="0%";
+        overlayList[currentStep+1].style.width ="100%";
+        currentStep += 1;
       }
       function prevStep(){
         stepIndicatorList[currentStep].style.fill = "rgb(217, 217, 217)"
@@ -49,7 +79,34 @@ $(document).ready( function () {
       }
       //sends assignment parameters to server
       function finish(){
-
+        //get parameters for generating pick lists and assigning them
+        var selectedOrdRows = $("#pendingOrderTable").DataTable().rows({selected:true}).data().pluck("0")
+        var selectOrdId = []
+        for(i=0; i< selectedOrdRows.length; i++){
+          selectOrdId.push(selectedOrdRows[i])
+        }
+        var selectedEmpRows = $("#selectEmpTable").DataTable().rows({selected:true}).data().pluck("0")
+        var selectedEmpId = []
+        for(i=0; i< selectedEmpRows.length; i++){
+          selectedEmpId.push(selectedEmpRows[i])
+        }
+        $.ajax({
+          url: '/',
+          type: "POST",
+          data: {"pick_pack_para":"pick_pack_para","ord_id": selectOrdId, "emp_id":selectedEmpId},
+          dataType: "json",
+          success:function(data){
+            if("insufficient_items" in data) {
+              alert("there are not enough stock for the following items: \n" + data["insufficient_items"])
+            }
+            else if ("success" in data){
+              alert("assignment successful")
+            }
+          },
+          error: function(data){
+          alert("failed");
+          }
+        })      
       }
 </script>
 
@@ -60,14 +117,14 @@ $(document).ready( function () {
 .dashboardContainer{
         border:solid black 2px;
         margin-left: 50px;
-        margin-top:50px; 
+        margin-top:50px;
         display: flex;
         justify-content: space-between;
         width: calc(90% - 200px);
         height:150px;
         align-items: center;
       }
-.tableOverlayContainer{        
+.tableOverlayContainer{
         width: 0;
         overflow-x: hidden;
         z-index: 2;
@@ -75,11 +132,11 @@ $(document).ready( function () {
         transition:0.2s;
       }
 .tableOverlayTopBar{
-        display:flex; 
+        display:flex;
         align-items:center;
-        border-bottom: solid 1px; 
+        border-bottom: solid 1px;
         box-shadow: 0 3px 3px -3px rgb(77, 77, 77);
-        min-height:35px; 
+        min-height:35px;
         font-size: 1.25em;
         font-weight: 700;
         margin-bottom: 15px;
@@ -112,18 +169,14 @@ $(document).ready( function () {
  <div class="contentTopBar" style="justify-content:start; align-items: center;">
             <p class="contentTopBarText" style="margin-right: 2vw;">Picking/Packing Assignment</p>
             <div>
-              <svg width="100px" height="60px">  
+              <svg width="100px" height="60px">
                 <polygon points="0,5 80,5 100,30 80,60 0,60" stroke="black" style="fill:rgb(255, 229, 63);" id="orderInd"></polygon>
                 <text x="5" y="35"  style="z-index:3; fill:black; font-weight:400">Orders</text>
               </svg>
-              
-              <svg width="100px" height="60px">  
+
+              <svg width="100px" height="60px">
                 <polygon points="0,5 80,5 100,30 80,60 0,60" stroke="black" style="fill:rgb(217, 217, 217)" id="employeeInd"></polygon>
                 <text x="5" y="35"  style="z-index:3; fill:black; font-weight:400">Employees</text>
-              </svg>
-              <svg width="100px" height="60px">  
-                <polygon points="0,5 80,5 100,30 80,60 0,60" stroke="black" style="fill:rgb(217, 217, 217);" id="vehicleInd"></polygon>
-                <text x="5" y="35"  style="z-index:3; fill:black; font-weight:400">Vehicles</text>
               </svg>
   </div>
 {% endblock %}
@@ -133,161 +186,19 @@ $(document).ready( function () {
             <!--Overlay for pending Orders-->
             <div id="overlayPendingOrd" class="tableOverlayContainer" style="position:absolute; width:100%;">
             <p style="margin-left:20px; font-size: 1.25em; font-weight: 500px;">Pending Orders</p>
-            <table id="pendingOrderTable" class="display">
-              <thead>
-                <th></th>
-                <th>Order id</th>
-                <th>Items</th>
-                <th>Placed Date</th>
-                <th>Placed Times</th>
-              </thead>
-              <tbody>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td>1</td>
-                  <td>2</td>
-                  <td>3</td>
-                  <td>4</td>
-                </tr>
-              </tbody>
-            </table>
+            <table id="pendingOrderTable" class="display"></table>
             <div>
               <button class="stepButton nextButton" onclick="nextStep()">Next Step</button>
             </div>
             </div>
             <!--Overlay for employee selection-->
             <div id="overlaySelectEmp" class="tableOverlayContainer" style="position:absolute;">
-              <p style="font-weight:600; ">Available Employees: <span id="availableEmp"></span></p>
-              <table id="selectEmpTable" class="display">
-                <thead>
-                  <th>Employee id</th>
-                  <th>Name</th>
-                  <th>Assigned Job</th>
-                  <th>Packing Station</th>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
-              <div>
-                <button class="stepButton prevButton" onclick="prevStep()">Prev Step</button>
-                <button class="stepButton nextButton" onclick="nextStep()">Next Step</button>
-              </div>
-            </div>
-            <!--Overlay for vehicle selection-->
-            <div id="overlaySelectVec" class="tableOverlayContainer" style="position:absolute;">
-              <p style="font-weight:600; ">Available Employees: <span id="availableEmp"></span></p>
-              <table id="selectVecTable" class="display">
-                <thead>
-                  <th></th>
-                  <th>No</th>
-                  <th>Vehicle Num</th>
-                  <th>Departure Time</th>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
+              <p style="font-weight:600;font-size: 1.25em; font-weight: 500px; ">Available Employees </p>
+              <table id="selectEmpTable" class="display"></table>
               <div>
                 <button class="stepButton prevButton" onclick="prevStep()">Prev Step</button>
                 <button class="stepButton nextButton" onclick="finish()">Finish</button>
               </div>
             </div>
-          </div>
+</div>
 {% endblock%}
