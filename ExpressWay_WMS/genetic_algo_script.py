@@ -3,8 +3,8 @@ import pygad
 from sqlalchemy.engine.row import LegacyRow
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text,select,delete, update
-from ExpressWay_WMS.database import db, pick_list
-
+from ExpressWay_WMS.database import db, orders, pick_list
+import json
 
 #database connection
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
@@ -145,19 +145,26 @@ def calculateDist(pickItems):
     
 #start of program/script
 with engine.connect() as connection:
-    orders = connection.execute(text("SELECT order_ids FROM picking_parameters")).all()
-    employees =connection.execute(text("SELECT employee_ids FROM picking_parameters")).all()
+    orderRows = connection.execute(text("SELECT order_ids FROM picking_parameters")).all()
+    employeeRows =connection.execute(text("SELECT employee_ids FROM picking_parameters")).all()
+    order_items = connection.execute(text("SELECT * from order_item WHERE order_id IN {}".format()))
+    ordersJson = json.loads(orderRows)
+    employeesJson = json.loads(employeeRows)
     inventoryLoc = connection.execute(text(""" 
             SELECT il.item_id, il.quantity, location
             FROM item_location il
             WHERE item_id IN(
                 SELECT item_id 
                 FROM order_item
-                WHERE order_id IN (700120)
+                WHERE order_id IN ({})
             )
             ORDER BY il.item_id
-    """)).all()
-# create order and item objects
+    """.format(ordersJson["order_id"]))).all()
+    order_itemRow = connection.execute(text("SELECT item_id, quantity from order_item WHERE order_id IN{}".format(ordersJson["order_id"]))).all()
+# create orderlist and inventory list
+order = order_itemRow
+employee= employeesJson["employee_id"]
+
 inventory ={}
 for location in inventoryLoc:
     if (location.item_id not in inventory):
@@ -166,8 +173,8 @@ for location in inventoryLoc:
 
 
 #variables for fitness functipm
-orderList = createOrderObjects(orders, inventory)
-numOfEmp = len(employees)
+orderList = createOrderObjects(order, inventory)
+numOfEmp = len(employee.split(","))
 numOfOrd = len(orderList)
 def fitness_func(solution, solution_idx):
     distance = 0
@@ -194,5 +201,20 @@ def fitness_func(solution, solution_idx):
     fitness = 1/(distance + variance)
     return fitness
 
-
+#variables to tweak to optimise Genetic Algo
+num_generations = 50
+num_parents_mating = 10
+sol_per_pop = 20
+num_genes = len(orderList)
+ga_instance = pygad.GA(num_generations=num_generations,
+                    num_parents_mating=num_parents_mating,
+                    fitness_func=fitness_func,
+                    sol_per_pop=sol_per_pop,
+                    num_genes=num_genes,
+                    gene_type=int,
+                    allow_duplicate_genes=False,
+                    gene_space={'low':0,'high':len(orderList)}
+                    )
+ga_instance.run()
+print(ga_instance.best_solution())
 

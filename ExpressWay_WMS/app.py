@@ -24,7 +24,7 @@ app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
-engine = db.create_engine(SQLALCHEMY_DATABASE_URI,{})
+engine = db.create_engine(SQLALCHEMY_DATABASE_URI, {})
 
 
 db.init_app(app)
@@ -75,7 +75,7 @@ def main():
                         SELECT il.item_id, SUM(il.quantity) AS inv_quantity
                         FROM item_location il
                         WHERE item_id IN(
-                            SELECT item_id 
+                            SELECT item_id
                             FROM order_item
                             WHERE order_id IN ({})
                         )
@@ -103,16 +103,16 @@ def main():
                         insufItems.append(item_id)
                         fulfilable = False
             if not fulfilable:
-                return {"insufficient_items":str(insufItems)}
-            #if inventory has sufficient stock add parameters to database to allow script to generate pick list at specified time 
+                return {"insufficient_items": str(insufItems)}
+            #if inventory has sufficient stock add parameters to database to allow script to generate pick list at specified time
             with engine.connect() as conn:
                 conn.execute(text("DELETE FROM picking_parameters where 1=1 "))
             selectedEmployees = request.form["emp_id"]
-            pick_para = picking_parameters(id = 1, order_ids ={"order_id":str(selectedOrders)}, employee_ids ={"employee_id":str(selectedEmployees)})
+            pick_para = picking_parameters(id = 1, order_ids ={'order_id':selectedOrders[1:-1]}, employee_ids ={'employee_id':selectedEmployees[1:-1]})
             db.session.add(pick_para)
             db.session.commit()
-            p = db.session.execute(select(picking_parameters.order_ids)).all()
             return ({"success":"success"})
+
 
 # manager side pages
 @app.route("/dashboard",methods = ['POST', 'GET'])
