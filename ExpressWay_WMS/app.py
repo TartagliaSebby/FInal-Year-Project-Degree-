@@ -1,7 +1,7 @@
 from flask import Flask, redirect, url_for, render_template, request,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text,select,delete, update
-from ExpressWay_WMS.database import orders, customer, item_location,item, seller,asn, asn_items, receive_discrepancies, order_item, delivery, employee,instruction ,pick_list, shift
+from ExpressWay_WMS.database import orders, customer, item_location,item, seller,asn, asn_items, receive_discrepancies, order_item, delivery, employee,instruction ,pick_list, shift,picking_parameters
 from ExpressWay_WMS.database import db
 from sqlalchemy.engine.row import LegacyRow
 import json
@@ -55,7 +55,7 @@ def main():
 
             elif request.form["table_data_req"] == "available_emp":
                 with engine.connect() as connection:
-                    query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id WHERE e.present = 1;")).all()
+                    query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id WHERE position ='worker'")).all()
                 strResults= []
                 if len(stringify(query)) != 0:
                     for row in stringify(query):
@@ -68,18 +68,20 @@ def main():
         if "pick_pack_para" in request.form:
             #check if inventory has enough items to fulfil order
             selectedOrders = request.form["ord_id"]
-            selectedOrdersString = str(selectedOrders)
             with engine.connect() as connection:
                 ord_inv_list = connection.execute(text("""
                     SELECT ord.item_id,  ord_quantity, inv_quantity
                     FROM (
                         SELECT il.item_id, SUM(il.quantity) AS inv_quantity
                         FROM item_location il
-                        WHERE il.item_id IN({})
+                        WHERE item_id IN(
+                            SELECT item_id 
+                            FROM order_item
+                            WHERE order_id IN ({})
+                        )
                         GROUP BY il.item_id
                         ORDER BY il.item_id
-                    ) inv 
-                    RIGHT OUTER JOIN (
+                    ) inv RIGHT OUTER JOIN (
                         SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
                         FROM order_item oi, orders o
                         WHERE oi.order_id = o.order_id
@@ -88,20 +90,29 @@ def main():
                         ORDER BY oi.item_id
                     ) ord
                     ON ord.item_id = inv.item_id;
-                """.format(selectedOrdersString[1:-1],selectedOrdersString[1:-1]))). all()
+                """.format(selectedOrders[1:-1],selectedOrders[1:-1]))). all()
             insufItems =[]
+            fulfilable =True
             for ord_inv in ord_inv_list:
                 item_id =  ord_inv.item_id
-                if str(ord_inv.inv_quantity) == "NONE":
+                if str(ord_inv.inv_quantity) == "None":
                     insufItems.append(item_id)
                     fulfilable = False
-                if ord_inv.ord_quantity > ord_inv.inv_quantity:
-                    insufItems.append(item_id)
-                    fulfilable = False
+                else:
+                    if ord_inv.ord_quantity > ord_inv.inv_quantity:
+                        insufItems.append(item_id)
+                        fulfilable = False
             if not fulfilable:
                 return {"insufficient_items":str(insufItems)}
-            return (str(ord_inv_list))
-
+            #if inventory has sufficient stock add parameters to database to allow script to generate pick list at specified time 
+            with engine.connect() as conn:
+                conn.execute(text("DELETE FROM picking_parameters where 1=1 "))
+            selectedEmployees = request.form["emp_id"]
+            pick_para = picking_parameters(id = 1, order_ids ={"order_id":str(selectedOrders)}, employee_ids ={"employee_id":str(selectedEmployees)})
+            db.session.add(pick_para)
+            db.session.commit()
+            p = db.session.execute(select(picking_parameters.order_ids)).all()
+            return ({"success":"success"})
 
 # manager side pages
 @app.route("/dashboard",methods = ['POST', 'GET'])

@@ -82,16 +82,13 @@ def calculateDist(pickItems):
         i+=1
     return distance
 
-#!!!!!!!!!!!!!!!should check if the order can be fulfilled based on available items before getting to this part
-#convert query data into objects for fitness function to calculate fitness
 def createOrderObjects(orders, inventory): # orders = orders to be fulfilled (list of all rows from query), inventory =  item location and quantity in each location
     #inventory should be dictionary {"item_id": {"i":{"location":location, "quantity": quantity}}} i=1,2,3 i.e first second and third instance of item from query
     orderIdIndex=[]
     orderList=[]
-    print(orders)
     for orderItem in orders: #order item should be 1 row from query
         ord_id = orderItem.order_id
-        if ord_id not in orderIdIndex: #!!!!!!!
+        if ord_id not in orderIdIndex: 
             orderIdIndex.append(ord_id)
             orderList.append(Order(ord_id,[]))
         x=True

@@ -128,3 +128,7 @@ class received_items(db.Model):
     location = db.Column(mysql.INTEGER(10))
     item = relationship("item", backref = "received_items")
 
+class picking_parameters(db.Model):
+    id = db.Column(mysql.INTEGER, primary_key =True)
+    order_ids = db.Column(mysql.JSON())
+    employee_ids = db.Column(mysql.JSON())

@@ -71,42 +71,53 @@ $(document).ready( function () {
         currentStep += 1;
       }
       function prevStep(){
-        stepIndicatorList[currentStep].style.fill = "rgb(217, 217, 217)"
-        stepIndicatorList[currentStep-1].style.fill ="rgb(255, 229, 63)"
-        overlayList[currentStep].style.width ="0%"
-        overlayList[currentStep-1].style.width ="100%"
-        currentStep -= 1
+        stepIndicatorList[currentStep].style.fill = "rgb(217, 217, 217)";
+        stepIndicatorList[currentStep-1].style.fill ="rgb(255, 229, 63)";
+        overlayList[currentStep].style.width ="0%";
+        overlayList[currentStep-1].style.width ="100%";
+        currentStep -= 1;
       }
       //sends assignment parameters to server
       function finish(){
-        //get parameters for generating pick lists and assigning them
-        var selectedOrdRows = $("#pendingOrderTable").DataTable().rows({selected:true}).data().pluck("0")
+        //get parameters from selected rows of the table
+        var selectedOrdRows = $("#pendingOrderTable").DataTable().rows({selected:true}).data().pluck("0");
         var selectOrdId = []
-        for(i=0; i< selectedOrdRows.length; i++){
-          selectOrdId.push(selectedOrdRows[i])
+
+        var selectedEmpRows = $("#selectEmpTable").DataTable().rows({selected:true}).data().pluck("0");
+        var selectedEmpId = [];
+
+        if (selectedOrdRows.length == 0 || selectedEmpRows.length == 0){
+          alert ("please select at least 1 order and employee");
         }
-        var selectedEmpRows = $("#selectEmpTable").DataTable().rows({selected:true}).data().pluck("0")
-        var selectedEmpId = []
-        for(i=0; i< selectedEmpRows.length; i++){
-          selectedEmpId.push(selectedEmpRows[i])
-        }
-        $.ajax({
-          url: '/',
-          type: "POST",
-          data: {"pick_pack_para":"pick_pack_para","ord_id": selectOrdId, "emp_id":selectedEmpId},
-          dataType: "json",
-          success:function(data){
-            if("insufficient_items" in data) {
-              alert("there are not enough stock for the following items: \n" + data["insufficient_items"])
+        else{
+            //process the parameters and send it to the server
+              for(i=0; i< selectedOrdRows.length; i++){
+              selectOrdId.push(selectedOrdRows[i]);
             }
-            else if ("success" in data){
-              alert("assignment successful")
+            for(i=0; i< selectedOrdRows.length; i++){
+              selectedEmpId.push(selectedEmpRows[i]);
             }
-          },
-          error: function(data){
-          alert("failed");
+            $.ajax({
+              url: '/',
+              type: "POST",
+              data: {"pick_pack_para":"pick_pack_para","ord_id": JSON.stringify(selectOrdId.join(',')) , "emp_id":JSON.stringify(selectedEmpId.join(','))},
+              dataType: "json",
+              success:function(data){
+                if("insufficient_items" in data) {
+                  alert("there are not enough stock for the following items: \n" + data["insufficient_items"])
+                }
+                else if ("success" in data){
+                  alert("assignment successful")
+                }
+                else{
+                    alert(JSON.Stringify(data))
+                }
+              },
+              error: function(data){
+              alert("failed");
+              }
+            })
           }
-        })      
       }
 </script>
 

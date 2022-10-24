@@ -123,63 +123,40 @@ ORDER BY il.item_id
 
 
 --query for the quantity of items needed to fulfil orders
-SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
-FROM order_item oi, orders o
-WHERE oi.order_id = o.order_id
-AND oi.order_id IN(700120, 701293)
-GROUP BY oi.item_id
-ORDER BY oi.item_id;
 
-SELECT inv.item_id, inv_quantity, ord_quantity
-FROM (
-    SELECT il.item_id, SUM(il.quantity) AS inv_quantity
-FROM item_location il
-WHERE il.item_id IN(102943,107832 )
-GROUP BY il.item_id
-ORDER BY il.item_id
-) as inv, (
-    SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
-FROM order_item oi, orders o
-WHERE oi.order_id = o.order_id
-AND oi.order_id IN(700120, 701293)
-GROUP BY oi.item_id
-ORDER BY oi.item_id
-) AS ord
-WHERE inv.item_id = ord.item_id
-
-
-
-
-SELECT inv.item_id, inv_quantity, ord_quantity
-FROM (
-    SELECT il.item_id, SUM(il.quantity) AS inv_quantity
-FROM item_location il
-WHERE il.item_id IN(102943,107832 )
-GROUP BY il.item_id
-ORDER BY il.item_id
-) as inv, (
-    SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
-FROM order_item oi, orders o
-WHERE oi.order_id = o.order_id
-AND oi.order_id IN(700120, 701293)
-GROUP BY oi.item_id
-ORDER BY oi.item_id
-) AS ord
-WHERE inv.item_id = ord.item_id
 
 SELECT ord.item_id,  ord_quantity, inv_quantity
 FROM (
     SELECT il.item_id, SUM(il.quantity) AS inv_quantity
     FROM item_location il
-    WHERE il.item_id IN(102943,107832 )
+    WHERE item_id IN(
+        SELECT item_id 
+        FROM order_item
+        WHERE order_id IN (700120)
+    )
     GROUP BY il.item_id
     ORDER BY il.item_id
 ) inv RIGHT OUTER JOIN (
     SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
     FROM order_item oi, orders o
     WHERE oi.order_id = o.order_id
-    AND oi.order_id IN(700120, 701293)
+    AND oi.order_id IN(700120)
     GROUP BY oi.item_id
     ORDER BY oi.item_id
 ) ord
 ON ord.item_id = inv.item_id;
+insert into picking_parameters values(1, '{"ids":"1234,4321"}' , '{"emp":"5678,8765"}')
+
+#inventory loction for script
+SELECT il.location, il.quantity
+FROM item_location il, orders_items oi
+WHERE 
+
+SELECT il.item_id, il.quantity , location
+FROM item_location il
+WHERE item_id IN(
+    SELECT item_id 
+    FROM order_item
+    WHERE order_id IN (700120)
+)
+ORDER BY il.item_id
