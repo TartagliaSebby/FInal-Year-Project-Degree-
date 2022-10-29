@@ -31,6 +31,10 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+with engine.connect() as connection:
+    q = connection.execute(text("SELECT order_ids FROM picking_parameters")).all()
+print(type(q))
+
 """
 build login page then use this function
 @app.route('/')
@@ -39,79 +43,7 @@ def login_page():
 """""
 @app.route("/", methods = ['POST', 'GET'])
 def main():
-    if request.method =="GET":
-        return render_template("manager_side/pick_pack_assignment_page.html")
-
-    elif request.method =="POST":
-        #requests for table data
-        if "table_data_req" in request.form:
-            if request.form["table_data_req"] =="pending_orders":
-                with engine.connect() as connection:
-                    query = connection.execute(text("SELECT o.order_id, SUM(oi.quantity) as items, placed_date FROM orders o, order_item oi WHERE o.order_id = oi.order_id AND o.order_status = 'pending' Group BY o.order_id;")).all()
-                strResults= query
-                if len(strResults) == 0:
-                    strResults = []
-                return (jsonify({"data":stringify(strResults)}))
-
-            elif request.form["table_data_req"] == "available_emp":
-                with engine.connect() as connection:
-                    query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id WHERE position ='worker'")).all()
-                strResults= []
-                if len(stringify(query)) != 0:
-                    for row in stringify(query):
-                        for i in range (2,4,1):
-                            if(row[i]=="None"):
-                                row[i] = "-"
-                        strResults.append(row)
-                return(jsonify({"data":strResults}))
-        #request for generating pick list
-        if "pick_pack_para" in request.form:
-            #check if inventory has enough items to fulfil order
-            selectedOrders = request.form["ord_id"]
-            with engine.connect() as connection:
-                ord_inv_list = connection.execute(text("""
-                    SELECT ord.item_id,  ord_quantity, inv_quantity
-                    FROM (
-                        SELECT il.item_id, SUM(il.quantity) AS inv_quantity
-                        FROM item_location il
-                        WHERE item_id IN(
-                            SELECT item_id
-                            FROM order_item
-                            WHERE order_id IN ({})
-                        )
-                        GROUP BY il.item_id
-                        ORDER BY il.item_id
-                    ) inv RIGHT OUTER JOIN (
-                        SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
-                        FROM order_item oi, orders o
-                        WHERE oi.order_id = o.order_id
-                        AND oi.order_id IN({})
-                        GROUP BY oi.item_id
-                        ORDER BY oi.item_id
-                    ) ord
-                    ON ord.item_id = inv.item_id;
-                """.format(selectedOrders[1:-1],selectedOrders[1:-1]))). all()
-            insufItems =[]
-            fulfilable =True
-            for ord_inv in ord_inv_list:
-                item_id =  ord_inv.item_id
-                if str(ord_inv.inv_quantity) == "None":
-                    insufItems.append(item_id)
-                    fulfilable = False
-                else:
-                    if ord_inv.ord_quantity > ord_inv.inv_quantity:
-                        insufItems.append(item_id)
-                        fulfilable = False
-            if not fulfilable:
-                return {"insufficient_items": str(insufItems)}
-            #if inventory has sufficient stock add parameters to database to allow script to generate pick list at specified time
-            with engine.connect() as conn:
-                conn.execute(text("DELETE FROM picking_parameters where 1=1 "))
-            selectedEmployees = request.form["emp_id"]
-            pick_para = picking_parameters(id = 1, order_ids ={'order_id':selectedOrders[1:-1]}, employee_ids ={'employee_id':selectedEmployees[1:-1]})
-            db.session.add(pick_para)
-            db.session.commit()
-            return ({"success":"success"})
+    s=1
 
 
 # manager side pages
@@ -128,7 +60,7 @@ def dashboard():
 def orders_page():
     if request.method == 'GET':
         with engine.connect() as connection:
-            query = connection.execute(text('SELECT o.order_id, c.name as "Customer Name", SUM(oi.quantity) as "num of items", order_status, placed_date FROM orders o, customer c, order_item oi where o.order_id = oi.order_id AND o.customer_id = c.customer_id AND o.order_status != "delivered" Group BY placed_date;')).all()
+            query = connection.execute(text('SELECT o.order_id, c.name as "Customer Name", SUM(oi.quantity) as "num of items", order_status, placed_date FROM orders o, customer c, order_item oi where o.order_id = oi.order_id AND o.customer_id = c.customer_id  Group BY placed_date;')).all()
         #if the query is empty return an empty list to prevent the data table from  crashing
         strResults = stringify(query) if len(query) !=  0  else []
         return render_template("manager_side/order_page.html" , orderTable_data= strResults)
@@ -296,9 +228,82 @@ def employee_page():
         strResults = stringify(query) if len(query) !=  0  else []
         return render_template("manager_side/employee_page.html", employeeData =strResults)
 
-@app.route("/pick_pack_assignment")
+@app.route("/pick_pack_assignment", methods = ["GET","POST"])
 def pick_pack_assignment_page():
-    return render_template("manager_side/pick_pack_assignment_page.html")
+    if request.method =="GET":
+        return render_template("manager_side/pick_pack_assignment_page.html")
+
+    elif request.method =="POST":
+        #requests for table data
+        if "table_data_req" in request.form:
+            if request.form["table_data_req"] =="pending_orders":
+                with engine.connect() as connection:
+                    query = connection.execute(text("SELECT o.order_id, SUM(oi.quantity) as items, placed_date FROM orders o, order_item oi WHERE o.order_id = oi.order_id AND o.order_status = 'pending' Group BY o.order_id;")).all()
+                strResults= query
+                if len(strResults) == 0:
+                    strResults = []
+                return (jsonify({"data":stringify(strResults)}))
+
+            elif request.form["table_data_req"] == "available_emp":
+                with engine.connect() as connection:
+                    query = connection.execute(text("SELECT e.emp_id, e.name, i.task, i.station FROM employee e LEFT OUTER JOIN instruction i ON e.emp_id = i.emp_id WHERE position ='worker'")).all()
+                strResults= []
+                if len(stringify(query)) != 0:
+                    for row in stringify(query):
+                        for i in range (2,4,1):
+                            if(row[i]=="None"):
+                                row[i] = "-"
+                        strResults.append(row)
+                return(jsonify({"data":strResults}))
+        #request for generating pick list
+        if "pick_pack_para" in request.form:
+
+            #check if inventory has enough items to fulfil order
+            selectedOrders = request.form["ord_id"]
+            with engine.connect() as connection:
+                ord_inv_list = connection.execute(text("""
+                    SELECT ord.item_id,  ord_quantity, inv_quantity
+                    FROM (
+                        SELECT il.item_id, SUM(il.quantity) AS inv_quantity
+                        FROM item_location il
+                        WHERE item_id IN(
+                            SELECT item_id
+                            FROM order_item
+                            WHERE order_id IN ({})
+                        )
+                        GROUP BY il.item_id
+                        ORDER BY il.item_id
+                    ) inv RIGHT OUTER JOIN (
+                        SELECT oi.item_id, SUM(oi.quantity) AS ord_quantity
+                        FROM order_item oi, orders o
+                        WHERE oi.order_id = o.order_id
+                        AND oi.order_id IN({})
+                        GROUP BY oi.item_id
+                        ORDER BY oi.item_id
+                    ) ord
+                    ON ord.item_id = inv.item_id;
+                """.format(selectedOrders[1:-1],selectedOrders[1:-1]))). all()
+            insufItems =[]
+            fulfilable =True
+            for ord_inv in ord_inv_list:
+                item_id =  ord_inv.item_id
+                if str(ord_inv.inv_quantity) == "None":
+                    insufItems.append(item_id)
+                    fulfilable = False
+                else:
+                    if ord_inv.ord_quantity > ord_inv.inv_quantity:
+                        insufItems.append(item_id)
+                        fulfilable = False
+            if not fulfilable:
+                return {"insufficient_items": str(insufItems)}
+            #if inventory has sufficient stock add parameters to database to allow script to generate pick list at specified time
+            with engine.connect() as conn:
+                conn.execute(text("DELETE FROM picking_parameters where 1=1 "))
+            selectedEmployees = request.form["emp_id"]
+            pick_para = picking_parameters(id = 1, order_ids ={'order_id':selectedOrders[1:-1]}, employee_ids ={'employee_id':selectedEmployees[1:-1]})
+            db.session.add(pick_para)
+            db.session.commit()
+            return ({"success":"success"})
 
 #employee side pages
 @app.route("/main_menu")

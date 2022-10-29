@@ -1,9 +1,11 @@
 import numpy
+import random
 import pygad
-from sqlalchemy.engine.row import LegacyRow
+#from sqlalchemy.engine.row import LegacyRow
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text,select,delete, update
-from ExpressWay_WMS.database import db, orders, pick_list
+from database import db, orders, pick_list
+from sqlalchemy.orm import sessionmaker
 import json
 
 #database connection
@@ -15,6 +17,8 @@ SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostnam
 )
 engine = db.create_engine(SQLALCHEMY_DATABASE_URI,{"pool_recycle": 299})
 
+session = sessionmaker(bind=engine)
+Session =session()
 
 class Item():
     def __init__(self, itemId, location, quantity):
@@ -34,7 +38,7 @@ class Order():
     def __init__(self, orderId, items):
         self.orderId = orderId
         self.items = items
-    
+
     def getItems(self):
         return self.items
 
@@ -45,20 +49,21 @@ def createOrderObjects(orders, inventory): # orders = orders to be fulfilled (li
     orderList=[]
     for orderItem in orders: #order item should be 1 row from query
         ord_id = orderItem.order_id
-        if ord_id not in orderIdIndex: 
+        if ord_id not in orderIdIndex:
             orderIdIndex.append(ord_id)
             orderList.append(Order(ord_id,[]))
         x=True
         ind = 1
         quantityNeeded = orderItem.quantity
-        #create item location based on the quantity/location available in inventory 
+        #create item location based on the quantity/location available in inventory
         while (x):
-            inventoryQuantity = inventory[str(orderItem.item_id)][str(ind)]["quantity"]
+            inventoryQuantity = int(inventory[str(orderItem.item_id)][str(ind)]["quantity"])
             if  inventoryQuantity >= quantityNeeded:
-                inventory[str(orderItem.item_id)][str(ind)]["quantity"] -= quantityNeeded
+                newQuant = int(inventory[str(orderItem.item_id)][str(ind)]["quantity"]) - quantityNeeded
+                inventory[str(orderItem.item_id)][str(ind)]["quantity"] = newQuant
                 index = orderIdIndex.index(ord_id)
                 orderList[index].items.append(Item(orderItem.item_id, inventory[str(orderItem.item_id)][str(ind)]["location"], quantityNeeded))
-                x=False    
+                x=False
             else:
                 index = orderIdIndex.index(ord_id)
                 orderList[index].items.append(Item(orderItem.item_id, inventory[str(orderItem.item_id)][str(ind)]["location"], inventoryQuantity))
@@ -87,10 +92,10 @@ def sortItems(pickItems):
         point = pickItems[i].getBay() + (pickItems[i].getAisle()*10)
         pointItem = pickItems[i]
         j= i-1
-        while j>=0 and point < (pickItems[j].getBay() + (pickItems[j].getAisle()*10)): 
-            pickItems[j+1] = pickItems[j]                   
+        while j>=0 and point < (pickItems[j].getBay() + (pickItems[j].getAisle()*10)):
+            pickItems[j+1] = pickItems[j]
             j-=1
-        pickItems[j+1] = pointItem 
+        pickItems[j+1] = pointItem
     return pickItems
 
 def changeAisle(fro, to ):
@@ -99,6 +104,7 @@ def changeAisle(fro, to ):
 #moving 1 bay = 1 unit moving accross 1 aisle = 3 units
 def calculateDist(pickItems):
     rackLength = 8
+    midPoint = rackLength/2
     distance = 0
     currentAisle = pickItems[0].getAisle()
     lastAisle = pickItems[len(pickItems)-1].getAisle()
@@ -106,7 +112,7 @@ def calculateDist(pickItems):
     #variable to check if the picker starts from the top or bottom of the racks (to achieve the combined routing strategy)
     fromBottom = True
     i =1
-    end = len(pickItems) 
+    end = len(pickItems)
     while(i<end ):
         if currentAisle != pickItems[i].getAisle() or currentAisle == lastAisle:
             if currentAisle == lastAisle:
@@ -124,9 +130,9 @@ def calculateDist(pickItems):
             else :
                 destBay = startBay
                 distance += rackLength - destBay
-            #when picker's last item is >4 start on the top when entering the next aisle
+            #when picker's last item is past the midpoint start on the top when entering the next aisle
             #adds the distance the picker walks to reach the top/bottom of the ailse
-            if(destBay >4):
+            if(destBay >midPoint):
                 distance += rackLength - destBay
                 fromBottom = False
             else:
@@ -142,46 +148,51 @@ def calculateDist(pickItems):
 
 
 
-    
+
 #start of program/script
 with engine.connect() as connection:
-    orderRows = connection.execute(text("SELECT order_ids FROM picking_parameters")).all()
-    employeeRows =connection.execute(text("SELECT employee_ids FROM picking_parameters")).all()
-    order_items = connection.execute(text("SELECT * from order_item WHERE order_id IN {}".format()))
-    ordersJson = json.loads(orderRows)
-    employeesJson = json.loads(employeeRows)
-    inventoryLoc = connection.execute(text(""" 
+    orderRows = connection.execute(text("SELECT order_ids FROM picking_parameters")).fetchall()
+    employeeRows =connection.execute(text("SELECT employee_ids FROM picking_parameters")).fetchall()
+    ordersJson = json.loads(orderRows[0].order_ids)
+    employeesJson = json.loads(employeeRows[0].employee_ids)
+    inventoryLoc = connection.execute(text("""
             SELECT il.item_id, il.quantity, location
             FROM item_location il
             WHERE item_id IN(
-                SELECT item_id 
+                SELECT item_id
                 FROM order_item
                 WHERE order_id IN ({})
             )
             ORDER BY il.item_id
-    """.format(ordersJson["order_id"]))).all()
-    order_itemRow = connection.execute(text("SELECT item_id, quantity from order_item WHERE order_id IN{}".format(ordersJson["order_id"]))).all()
+    """.format(ordersJson["order_id"]))).fetchall()
+    order_itemRow = connection.execute(text("SELECT order_id, item_id, quantity from order_item WHERE order_id IN ( {} )".format(ordersJson["order_id"]))).fetchall()
 # create orderlist and inventory list
 order = order_itemRow
 employee= employeesJson["employee_id"]
 
+
 inventory ={}
 for location in inventoryLoc:
-    if (location.item_id not in inventory):
+    if location.item_id not in inventory:
+        inventory[str(location.item_id)] = {"1":{"location" :str(location.location), "quantity":str(location.quantity)}}
+    else:
         size = len(inventory[str(location.item_id)])
-        inventory[str(location.item_id)] = {str(size+1): {"location" :str(location.location), "quantity":str(location.quantity)}}
-
+        inventory[str(location.item_id)][str(size+1)] = {"location" :str(location.location), "quantity":str(location.quantity)}
 
 #variables for fitness functipm
 orderList = createOrderObjects(order, inventory)
-numOfEmp = len(employee.split(","))
+employeeList = employee.split(",")
+
+numOfEmp = len(employeeList)
 numOfOrd = len(orderList)
 def fitness_func(solution, solution_idx):
     distance = 0
     tempOrdList = []
     for i in range (0, len(solution)):
         tempOrdList.append(orderList[solution[i]])
+    random.shuffle(tempOrdList)
     splitedOrd = splitOrders(tempOrdList, numOfEmp)
+
     #calculate distance for each pickList and sum up distance
     for pickList in splitedOrd:
         itemsList =[]
@@ -189,22 +200,24 @@ def fitness_func(solution, solution_idx):
             itemsList.extend(order.items)
         sortItems(itemsList)
         distance += calculateDist(itemsList)
+    """
     #calculate variance of number of items in each pick list
     numOfItems = []
     for pickList in splitedOrd:
         totalItems = 0
         for order in pickList:
-            for item in order.items:   
+            for item in order.items:
                 totalItems += item.quantity
         numOfItems.append(totalItems)
     variance = numpy.var(numOfItems)
-    fitness = 1/(distance + variance)
+    """
+    fitness = -distance #+ (1/variance)
     return fitness
 
 #variables to tweak to optimise Genetic Algo
-num_generations = 50
+num_generations = 100
 num_parents_mating = 10
-sol_per_pop = 20
+sol_per_pop = 60
 num_genes = len(orderList)
 ga_instance = pygad.GA(num_generations=num_generations,
                     num_parents_mating=num_parents_mating,
@@ -213,8 +226,45 @@ ga_instance = pygad.GA(num_generations=num_generations,
                     num_genes=num_genes,
                     gene_type=int,
                     allow_duplicate_genes=False,
-                    gene_space={'low':0,'high':len(orderList)}
+                    crossover_type="uniform",
+                    crossover_probability= 0.1,
+                    mutation_type="adaptive",
+                    mutation_probability=[0.4,0.01],
+                    #mutation_num_genes = [int(num_genes/4),2],
+                    parent_selection_type="sss",
+                    gene_space={'low':0,'high':len(orderList)},
+                    keep_elitism=int(sol_per_pop/4),
+                    #stop_criteria=["saturate_20"],
+                    suppress_warnings=True,
+                    save_best_solutions=True
                     )
 ga_instance.run()
-print(ga_instance.best_solution())
+
+#clear old pickList and store new pick_list
+#db.session.execute(delete(pick_list).where(1==1))
+with engine.connect() as conn:
+    conn.execute(("delete from pick_list where 1=1"))
+ind_sol =ga_instance.best_solutions[ga_instance.best_solution_generation]
+splitedAssigned = splitOrders(orderList, numOfEmp)
+x=0
+for pickList in splitedAssigned:
+    itemsinList =[]
+    for order in pickList:
+        itemsinList+= order.items
+    sortItems(itemsinList)
+    FPickList={}
+    i=0
+    for item in itemsinList:
+        print("item ",type(item)," iteminlist ", type(itemsinList))
+        FPickList[str(i)] ={"item_id":item.itemId, "location":item.location, "quantity": item.quantity}
+    #picklists contain item_id quantity and location and //order id
+    """
+    with Session.begin() as session:
+        pl = pick_list(emp_id = employeeList[x], pick_list = FPickList)
+        session.add_all(pl)
+    """
+    with engine.connect() as conn:
+        conn.execute(text("INSERT INTO pick_list VALUES({},\"{}\")".format(employeeList[x], FPickList)))
+    x+1
+
 

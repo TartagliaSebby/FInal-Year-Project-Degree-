@@ -4,7 +4,7 @@ FROM orders o, customer c, order_item oi
 where o.order_id = oi.order_id 
 AND o.customer_id = c.customer_id
 AND o.order_status != "delivered"
-Group BY placed_date;
+Group BY order_id;
 
 --manager side order page overlayn table
 SELECT item.item_id, item.item_name, seller.seller_id, order_item.quantity
