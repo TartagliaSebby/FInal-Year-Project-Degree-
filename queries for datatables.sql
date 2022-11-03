@@ -160,3 +160,60 @@ WHERE item_id IN(
     WHERE order_id IN (700120)
 )
 ORDER BY il.item_id
+
+
+
+#---- employees----
+
+#instrcutions table
+SELECT task, station
+FROM instruction
+where emp_id ={}
+
+#receive page table 1
+SELECT arrival_time, vehicle_no, asn_status
+FROM asn 
+where DATE(arrival_date) = curdate()
+
+SELECT arrival_time, vehicle_no, asn_status FROM asn  where DATE(arrival_date) = curdate()
+
+#table 2
+SELECT ai.item_id, i.item_name, i.item_desc, ai.quantity
+FROM asn_items ai, item i
+WHERE ai.item_id = i.item_id
+AND asn_id = {}
+
+SELECT ai.item_id, i.item_name, i.item_desc, ai.quantity FROM asn_items ai, item i WHERE ai.item_id = i.item_id AND asn_id = {}
+
+#receive pag table 3(discrepancy report)
+SELECT ai.item_id, i.item_name, ai.quantity
+FROM asn_items ai, item i
+WHERE ai.item_id = i.item_id
+AND asn_id = 458123 {}
+
+SELECT ai.item_id, i.item_name, ai.quantity FROM asn_items ai, item i WHERE ai.item_id = i.item_id AND asn_id = {}
+
+#received items
+SELECT item_id  FROM item_location WHERE item_id IN (SELECT item_id from asn_items WHERE asn_id = {}
+
+
+select ai.item_id, il.location, ai.quantity 
+from asn_items ai, item_location il 
+WHERE ai.item_id = il.item_id 
+AND ai.asn_id = '491732'{}
+
+
+
+select item_id, quantity 
+from asn_items
+WHERE item_id Not IN (
+    select ai.item_id from asn_items ai, item_location il where ai.item_id = il.item_id AND asn_id = '491732'
+)AND asn_id = '491732'
+
+select item_id, quantity from asn_items WHERE item_id Not IN ( select ai.item_id from asn_items ai, item_location il where ai.item_id = il.item_id AND asn_id = '491732')AND asn_id = '491732'
+
+--put away tables
+select ri.item_id, i.item_name, ri.location 
+from received_items ri, item i
+where ri.item_id = i.item_id
+

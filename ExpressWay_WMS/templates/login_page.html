@@ -1,25 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> </title> 
+    <title>ExpressWay WMS</title> 
     <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
 
-    
-    <link rel="stylesheet" href="../../static/css/employee_common.css">
-    <style>
+    <!--external stylesheets and libraries-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
 
+    <script>
+        function sendLoginDetails(){
+            id = document.getElementById("id_field").value
+            pass = document.getElementById("pass_field").value
+            $.ajax({
+                url:"/",
+                type:"POST",
+                data:{"emp_id":JSON.stringify(id), "password":JSON.stringify(pass)},
+                dataType: "text",
+                success:function(data){
+                    alert(data) 
+                }
+            })
+        }
+    </script>
+
+    <style>
+    .text{
+        font-size: large;
+    }
     </style>
+    {% with msgs = get_flashed_messages() %}
+    {%if msgs%}
+        {%for msg in msgs%}
+            <p style ="background-color: blanchedalmond;">{{msg}}</p>
+        {%endfor%}
+    {%endif%}
+    {%endwith%}
 </head>
 
 <body style="background-color:lightblue ;"> 
-    <div style="margin-left: auto; margin-right: auto;">
-        <p>
-            User Name:
-            <input type="text">
-        </p>
-        <p>
-            Password:
-        </p>
+    <!--
+    <div style="top:40%;position:absolute; display:flex; width:100%">
+        <div style="margin-left: auto; margin-right: auto;">
+            <table>
+                <tr> <td colspan="2">ExpressWay WMS Login</td></tr>
+                <tr>
+                    <td> User Name:</td>
+                    <td><input type="text" name="emp_id" id="id_field"></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><input type="text" name="password" id="pass_field"></td>
+                </tr>
+            </table>
+            <button onclick="sendLoginDetails">
+        </div>
     </div>
+-->
+    <form action="{{url_for('login_page')}}" method="post">
+        <div style="margin:auto; width: 50%;">
+            <div class="row mb-6">
+                <div class="col ">
+                <p>ExpressWay WMS Login</p>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="text" id="id_field" name="emp_id"class="form-control" placeholder="Employee id" required/>
+                <label  for="id">Employee id</label>
+            </div>
+            <div class="form-floating mb-4">
+                <input type="password" id="pass_field" name="password" class="form-control" placeholder="Password" required/>
+                <label class="form-label" >Password</label>
+            </div>
+    
+            <div class="row mb-4">
+            <div class="col d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary btn-block mb-4" >Sign in</button>
+            </div>
+        </div>
+    </form>
 </body>
 </html>

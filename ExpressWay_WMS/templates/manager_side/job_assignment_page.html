@@ -35,24 +35,23 @@ $(document).ready( function () {
 setInterval( function(){
   $('#jobTable').DataTable().ajax.reload(null, false);
 }, 5000);
+
+var emp_assignment_modal =  new bootstrap.Modal(document.getElementById("#modal"),{});
+
+
 function openOL(emp_name, emp_id){
-  document.getElementById("overlay").style.width="400px";
-  document.getElementById("overlay").style.height="250px";
-  document.getElementById("backButton").style.width="100%";
-  document.getElementById("overlay").style.top="200px";
+  emp_assignment_modal.show();
   document.getElementById("emp_name").textContent=emp_name;
   $("#emp_name").data('empid',emp_id);
 }
 function closeOL(){
   //update display in webpage
-  document.getElementById("overlay").style.width="0";
-  document.getElementById("overlay").style.height="0";
-  document.getElementById("overlay").style.top="-5px";
-  document.getElementById("backButton").style.width="0%";
-  //sends update instrction to server
+  emp_assignment_modal.hide()
 }
+//sends update instrction to server
 function sendUpdateInst(){
     taskDD = document.getElementById("task");
+    
     stationDD = document.getElementById("station");
     if(taskDD.value != "default" ){
       emp_id = $("#emp_name").data('empid');
@@ -164,13 +163,13 @@ function changeOptions(){
 {% block content %}
 {{json}}
 <div style="display:flex; flex-direction: column;">
-      <div class="contentTopBar">
-          <p class="contentTopBarText">Job Assignment</p>
-      </div>
+  <div class="contentTopBar">
+      <p class="contentTopBarText">Job Assignment</p>
+  </div>
 
-      <!--table-->
-      <table id="jobTable" class="display"></table>
-      <button style="align-self: flex-end; margin-top:20px; width:110px; height: 30px;" ><a href="/pick_pack_assignment">Assign Jobs</a></button>
+  <!--table-->
+  <table id="jobTable" class="display"></table>
+  <button style="align-self: flex-end; margin-top:20px; width:110px; height: 30px;" ><a href="/pick_pack_assignment">Assign Jobs</a></button>
 </div>
 {% endblock%}
 
@@ -219,6 +218,26 @@ function changeOptions(){
       </tbody>
     </table>
   </div>
+</div>
+<!--modal-->
+<div class ="modal fade" id ="modal" tabindex="-1" aria-labelledby="modal_label">
+  <div class ="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-title fs-5" id="modal_label">
+        <h1>Assign task to employee</h1> 
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="cancel"></button>
+      </div>
+      <div class ="modal-body">
+        <p>helloe</p>
+      </div>
+      <div class ="modal-footer">
+        <button type="button" class ="btm btn-secondary"data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Confirm</button>
+      </div>
+    </div>
+
+  </div>
+
 </div>
 <!--close the overlay by clicking outside the overlay-->
 <div onclick="closeOL();sendUpdateInst()" id="backButton" ></div>

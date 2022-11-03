@@ -16,7 +16,7 @@ $(document).ready( function () {
             ],
             "ajax":{
               "data": {"table_data_req":"pending_orders"} ,
-              "url": "/",
+              "url": "/pick_pack_assignment",
               "type":"Post",
               "datasrc": ""
             },
@@ -39,7 +39,7 @@ $(document).ready( function () {
           ],
           "ajax":{
               "data": {"table_data_req":"available_emp"} ,
-              "url": "/",
+              "url": "/pick_pack_assignment",
               "type":"Post",
               "datasrc": ""
             },
@@ -98,12 +98,14 @@ $(document).ready( function () {
               selectedEmpId.push(selectedEmpRows[i]);
             }
             $.ajax({
-              url: '/',
+              url: '/pick_pack_assignment',
               type: "POST",
+              //convert selected parameters lists into string separated witb ","
               data: {"pick_pack_para":"pick_pack_para","ord_id": JSON.stringify(selectOrdId.join(',')) , "emp_id":JSON.stringify(selectedEmpId.join(','))},
               dataType: "json",
               success:function(data){
                 if("insufficient_items" in data) {
+
                   alert("there are not enough stock for the following items: \n" + data["insufficient_items"])
                 }
                 else if ("success" in data){

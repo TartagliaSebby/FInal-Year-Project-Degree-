@@ -5,7 +5,7 @@ import pygad
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text,select,delete, update
 from database import db, orders, pick_list
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 import json
 
 #database connection
@@ -239,7 +239,6 @@ ga_instance = pygad.GA(num_generations=num_generations,
                     save_best_solutions=True
                     )
 ga_instance.run()
-
 #clear old pickList and store new pick_list
 #db.session.execute(delete(pick_list).where(1==1))
 with engine.connect() as conn:
@@ -255,16 +254,24 @@ for pickList in splitedAssigned:
     FPickList={}
     i=0
     for item in itemsinList:
-        print("item ",type(item)," iteminlist ", type(itemsinList))
         FPickList[str(i)] ={"item_id":item.itemId, "location":item.location, "quantity": item.quantity}
-    #picklists contain item_id quantity and location and //order id
-    """
-    with Session.begin() as session:
-        pl = pick_list(emp_id = employeeList[x], pick_list = FPickList)
-        session.add_all(pl)
+        i+=1
+        #picklists contain item_id quantity and location and //order id  
+    pl = pick_list(emp_id = employeeList[x], pick_list = FPickList)
+    x+=1
+    Session.add(pl)
+    Session.commit()
+    Session.close
     """
     with engine.connect() as conn:
         conn.execute(text("INSERT INTO pick_list VALUES({},\"{}\")".format(employeeList[x], FPickList)))
-    x+1
+    """
+    """
+    with Session.begin() as session:
+        pl = pick_list(emp_id = employeeList[x], pick_list = FPickList)
+        session.add(pl)
+        session.commit()
+    """
+
 
 

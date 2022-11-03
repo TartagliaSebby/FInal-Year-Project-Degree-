@@ -1,16 +1,21 @@
-from flask import Flask, redirect, url_for, render_template, request,jsonify
+from flask import Flask, redirect, url_for, render_template, request,jsonify, session, flash
+from functools import wraps
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text,select,delete, update
 from ExpressWay_WMS.database import orders, customer, item_location,item, seller,asn, asn_items, receive_discrepancies, order_item, delivery, employee,instruction ,pick_list, shift,picking_parameters
 from ExpressWay_WMS.database import db
 from sqlalchemy.engine.row import LegacyRow
+from datetime import timedelta
+import random
 import json
 
 
 
 
 app = Flask(__name__)
+app.secret_key = "FYP"
 app.config['JSON_SORT_KEYS'] = False
+app.permanent_session_lifetime = timedelta(minutes=1)
 
 #database connection
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
@@ -31,23 +36,53 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-with engine.connect() as connection:
-    q = connection.execute(text("SELECT order_ids FROM picking_parameters")).all()
-print(type(q))
+def manager_login(x):
+    @wraps(x)
+    def decorated_function(*args, **kwargs):
+        if session.get("logged_in") is None or session.get("authorisation") != "manager":
+            return render_template("login_page.html")
+        return x(*args, **kwargs)
+    return decorated_function
+def emp_login(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("logged_in") is None or session.get("authorisation") != "employee":
+            return render_template("login_page.html")
+        return f(*args, **kwargs)
+    return decorated_function
 
-"""
-build login page then use this function
-@app.route('/')
+#build login page then use this function
+@app.route('/', methods=['POST', 'GET'])
 def login_page():
-    return render_template("login_page.html")
-"""""
+    if request.method =="GET":
+        return render_template("login_page.html")
+    elif request.method =="POST":
+        emp_id = request.form.get("emp_id")
+        password = request.form.get("password")
+        #authenticate and authorise user
+        employee_info = db.session.execute(select(employee.password, employee.position).where(employee.emp_id ==emp_id)).all()
+        if len(employee_info) ==0 or compareTo(str(employee_info[0].password), password) != 0:
+            flash("Invalid credentials!")
+            #return render_template("login_page.html")
+            return redirect(url_for("login_page"))
+        else:
+            session["emp_id"] = emp_id
+            session["logged_in"] = "logged_in"
+            session ["authorisation"] = employee_info[0].position
+            session.permanent =True
+            if session.get("authorisation") == "worker":
+                return redirect(url_for('mainMenu'))
+            elif session.get("authorisation") == "manager":
+                return redirect(url_for('dashboard'))
+"""
 @app.route("/", methods = ['POST', 'GET'])
 def main():
-    s=1
-
+    return render_template("employee_side/main_page.html")
+"""
 
 # manager side pages
 @app.route("/dashboard",methods = ['POST', 'GET'])
+@manager_login
 def dashboard():
     with engine.connect() as connection:
         ord= connection.execute(text('select count(order_id) from orders where order_status="pending";'))
@@ -140,7 +175,7 @@ def receive_discrepancy_page():
         asnid = request.form["asn_id"]
         with engine.connect() as connection:
             overlayL = db.session.execute(select(receive_discrepancies.asn_id, seller.seller_name, asn.shipment_type, asn.arrival_date,asn.arrival_time,receive_discrepancies.note).where(asn.seller_id == seller.seller_id).where(receive_discrepancies.asn_id == asn.asn_id).where(receive_discrepancies.asn_id == asnid)).all()
-            tableL = db.session.execute(select(receive_discrepancies.item_id, item.item_name, receive_discrepancies.expected, receive_discrepancies.received, receive_discrepancies.damaged).where(receive_discrepancies.item_id == item.item_id).where(receive_discrepancies.asn_id == asnid))
+            tableL = db.session.execute(select(receive_discrepancies.item_id, item.item_name, receive_discrepancies.expected, receive_discrepancies.received, receive_discrepancies.damaged).where(receive_discrepancies.item_id == item.item_id).where(receive_discrepancies.asn_id == asnid)).all()
         overlayRow = overlayL[0]
         #preparing table data in the form of a list
         disc_item_list = []
@@ -306,37 +341,116 @@ def pick_pack_assignment_page():
             return ({"success":"success"})
 
 #employee side pages
-@app.route("/main_menu")
+@app.route("/main_menu", methods = ["GET","POST"])
 def mainMenu():
     return render_template("employee_side/main_page.html")
 
-@app.route("/instructions")
+@app.route("/instructions", methods = ["GET","POST"])
 def instructions():
-    return render_template("employee_side/instructions_page.html")
+    if request.method == "GET":
+        return render_template("employee_side/instructions_page.html")
 
-@app.route("/receive")
+    elif request.method =="POST":
+        tasks = db.session.execute(select(instruction.task, instruction.station).where(instruction.emp_id == session.get("emp_id"))).all()
+        if len(tasks) ==0:
+            return{"no_inst":stringify([])}
+        else:
+            return ({"data":[stringify([tasks[0].task, tasks[0].station])]})
+
+@app.route("/receive", methods = ["GET","POST"])
 def receive():
-    return render_template("employee_side/receiving_page.html")
+    if request.method == "GET":
+        return render_template("employee_side/receiving_page.html")
+    elif request.method == "POST":
+        if "ship_tdy" in request.form:    
+            with engine.connect() as connection:
+                data = connection.execute(text("SELECT asn_id, arrival_time, vehicle_no, asn_status FROM asn  where DATE(arrival_date) = curdate()")).all()
+            asn_list =[]
+            for asn in data:
+                row = [str(asn.asn_id),str(asn.arrival_time), asn.vehicle_no, asn.asn_status]
+                asn_list.append(row)
+            return (jsonify({"asn":asn_list}))
+        elif "asn_items" in request.form:
+            asnid = request.form.get("asn_id")
+            with engine.connect() as connection:
+                data = connection.execute(text("SELECT ai.item_id, i.item_name, i.item_desc, ai.quantity FROM asn_items ai, item i WHERE ai.item_id = i.item_id AND asn_id = {}".format(asnid))).all()
+            asn_item_list =[]
+            for asn_item in data:
+                row = [asn_item.item_id, asn_item.item_name, asn_item.item_desc, asn_item.quantity]
+                asn_item_list.append(row)
+            return(jsonify({"asn_items":asn_item_list}))
+        elif "asn_info" in request.form:
+            asnid = request.form.get("asn_id")
+            with engine.connect() as connection:
+                data = connection.execute(text("SELECT ai.item_id, i.item_name, ai.quantity FROM asn_items ai, item i WHERE ai.item_id = i.item_id AND asn_id = {}".format(asnid))).all()
+            asn_item_list = []
+            for asn_item in data:
+                row = [asn_item.item_id, asn_item.item_name, asn_item.quantity, "-", "-"]
+                asn_item_list.append(row)
+            return (jsonify({"data": asn_item_list}))
+        elif "receive" in request.form:
+            asn_id = request.form.get("asn_id")
+            with engine.connect() as connection:
+                #query for items that are already in the warehouse and items that are not
+                nonDupItems =  connection.execute(text("select item_id, quantity from asn_items WHERE item_id Not IN ( select ai.item_id from asn_items ai, item_location il where ai.item_id = il.item_id AND asn_id = {})AND asn_id = {}".format(asn_id, asn_id))).all()
+                dupItems = connection.execute(text("select distinct ai.item_id, ai.quantity from asn_items ai, item_location il WHERE ai.item_id = il.item_id AND ai.asn_id = {}".format(asn_id))).all()
+                #connection.execute(text("SELECT item_id  FROM item_location WHERE item_id IN (SELECT item_id from asn_items WHERE asn_id ={}) AND".format(asn_id))).all()
+            for item in dupItems:
+                with engine.connect() as connection:
+                    loc = connection.execute(text("select location, quantity from item_location where item_id = {} order by quantity".format(item.item_id))).all()[0]
+                    connection.execute(text("insert into received_items values({},0, {}, \'{}\')".format(item.item_id, item.quantity, loc.location)))
+            for item in nonDupItems:
+                with engine.connect() as connection:
+                    connection.execute(text("insert into received_items values({},0, {}, \'{}\'))".format(item.item_id,  item.quantity,genRandLoc())))
+            with engine.connect() as connection:
+               connection.execute(text("update asn set asn_status = 'received' where asn_id = {}".format(asn_id)))
+            return ({"success":"success"})
+        elif "disc_report" in request.form:
+            db.session.add(receive_discrepancies(asn_id = request.form.get("asn_id"),item_id = request.form.get("item_id"),note = request.form.get("note"),expected = request.form.get("expected"),received = request.form.get("received"),damaged = request.form.get("damaged")))
+            db.session.commit()
+            return ({"success":"success"})
 
-@app.route("/putAway")
+
+
+@app.route("/putAway", methods = ["GET","POST"])
 def putAway():
-    return render_template("employee_side/put_away_page.html")
+    if request.method == "GET":
+        return render_template("employee_side/put_away_page.html")
+    elif request.method == "POST":
+        if "put_away_items" in request.form:
+            with engine.connect() as connection:
+                query =connection.execute(text("select ri.item_id, i.item_name, ri.location from received_items ri, item i where ri.item_id = i.item_id;")).all()
+            item_list =[]
+            for item in query:
+                row =[item.item_id, item.item_name, item.location ]
+                item_list.append(row)
+            return ({"data":item_list})
+        elif "confirmPA" in request.form:
+            
+        
 
-@app.route("/picking")
+@app.route("/picking", methods = ["GET","POST"])
 def picking():
     return render_template("employee_side/picking_page.html")
 
-@app.route("/packing")
+@app.route("/packing", methods = ["GET","POST"])
 def packing():
     return render_template("employee_side/packing_page.html")
 
-@app.route("/inventoryCount")
+@app.route("/inventoryCount", methods = ["GET","POST"])
 def inventoryCount():
     return render_template("employee_side/inventory_count_page.html")
 
-@app.route("/loading")
+@app.route("/loading", methods = ["GET","POST"])
 def loading():
     return render_template("employee_side/loading_page.html")
+
+#logout 
+@app.route("/logout", methods = ["GET","POST"])
+def logout():
+    session.clear()
+    return redirect(url_for('login_page'))
+
 
 #general methods
 def stringify(List):
@@ -347,7 +461,27 @@ def stringify(List):
         else:
            result.append(str(item))
     return result
+#used to sanitise user input (returns zero when string matches exactly)
+def compareTo(a,b):
+    return ((a > b) - (a < b))
 
+def genRandLoc ():
+    aisle = ["01","02","03","04"]
+    rack = ['A','B','C','D']
+    bay =["1","2","3","4","5","6","7","8"]
+    level = ["L1","L2","L3"]
+    bin =["1","2","3"]
+    ordaisle = str(random.choice(aisle)) 
+    if ordaisle == "01":
+        orderrack = 'A'
+    else:
+        aisles= int(ordaisle) 
+        orderrack = str(random.choice(rack[aisles-2: aisles]))
+    ordbay = str(random.choice(bay))  
+    ordlevel = str(random.choice(level)) 
+    ordbin = str(random.choice(bin))
+    ordloc = ordaisle+ "-" + orderrack + "-"+ordbay +"-"+ordlevel +"-" +ordbin
+    return ordloc
 
 
 

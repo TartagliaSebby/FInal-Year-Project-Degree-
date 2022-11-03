@@ -93,6 +93,8 @@ insert into asn values(458123, 219421,'2022-1-30','17:00','self', "Received", "V
 insert into asn values(499921, 202317,'2022-2-12','10:30','self','Received',"JQY2363");
 insert into asn values(444212,200012,'2022-1-21', '12:00', 'courier', "Received", "JTE7218");
 insert into asn values(450512, 223531,'2022-10-14', "13:00",'self', "pending", "PQT2945");
+insert into asn values(427492, 200012,'2022-11-1', "13:00",'self', "pending", "JTE7218");
+insert into asn values(491732, 202317,'2022-11-2', "13:00",'self', "pending", "JQY2363");
 
 #ASN_item table
 insert into asn_items values(400210,107832,5);
@@ -101,6 +103,7 @@ insert into asn_items values(458123,128420,20);
 insert into asn_items values(499921,102352,5);
 insert into asn_items values(444212,183913,3);
 insert into asn_items values(450512,104921,3);
+insert into asn_items values(491732,104921,3);
 
 #item_location table 
 insert into item_location values('03-C-2-L2-2', 104921, 4);

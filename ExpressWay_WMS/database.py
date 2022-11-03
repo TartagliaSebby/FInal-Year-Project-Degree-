@@ -125,7 +125,7 @@ class received_items(db.Model):
     item_id = db.Column(mysql.INTEGER(6), db.ForeignKey(item.item_id), primary_key =True)
     putaway = db.Column(mysql.BOOLEAN)
     quantity = db.Column(mysql.INTEGER(6))
-    location = db.Column(mysql.INTEGER(10))
+    location = db.Column(db.String(13))
     item = relationship("item", backref = "received_items")
 
 class picking_parameters(db.Model):

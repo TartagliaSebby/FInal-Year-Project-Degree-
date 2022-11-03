@@ -1,26 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> </title> 
+    <title>Receive Page </title>
     <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <!--libraries-->
     <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
     <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
     <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
     <script>
+        //global variables
+        selAsnId = null
+        asn_items =[]
+        discReportChanges = []
         //initialise data tables
          $(document).ready( function () {
-            $('#shipmentTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,
+
+            var shipTab = $('#shipmentTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,select:'single',
+            columns:[
+                {title:"asn id"},
+                {title:"Time"},
+                {title:"Vehicle No"},
+                {title:"Status"},
+            ],
             //make sure task table displays at least a min number of rows
             drawCallback: function(){
                     var api =  $('#shipmentTable').DataTable();
                     var rows = api.rows({page: 'current'}).count();
                     for(var i=0; i<api.page.len() - rows; i++){
-                        $('#shipmentTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td></tr>"));
+                        $('#shipmentTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
                     }
                 }
             });
-            $('#asnTable').DataTable({"searching":false, "lengthChange":false, "info":false,"pageLength":5,
+           $.ajax({
+                url: '/receive',
+                type: "POST",
+                data: {"ship_tdy":"ship_tdy"},
+                dataType: "json",
+                success:function(data){
+                   shipTab.rows.add(data["asn"]).draw()
+                }
+            });
+             var asnTab = $('#asnTable').DataTable({"searching":false, "lengthChange":false, "info":false,"pageLength":5,
                 //make sure asn table displays at least a min number of rows
                 drawCallback: function(){
                     var api =  $('#asnTable').DataTable();
@@ -30,7 +53,7 @@
                     }
                 }
             });
-            $('#discreReportTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":5,
+            var discTab = $('#discreReportTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":5, select:'single',
                     //make sure  discrepancy table displays at least a min number of rows
                     drawCallback: function(){
                             var api =  $('#discreReportTable').DataTable();
@@ -38,23 +61,115 @@
                             for(var i=0; i<api.page.len() - rows; i++){
                                 $('#discreReportTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>"));
                             }
-                        }      
+                        }
             });
+
+            //event listeners
+            shipTab.on('select',function(e, dt, type, indexes ){
+                if (type == "row"){
+                    var asn_id = shipTab.rows(indexes).data().pluck('0')[0];
+                    selAsnId = asn_id
+                    $.ajax({
+                        url: '/receive',
+                        type: "POST",
+                        data: {"asn_items":"asn_items","asn_id":asn_id},
+                        dataType: "json",
+                        success:function(data){
+                            openAsnOl(data["asn_items"])
+                        },
+                        error: function(data){
+                            alert("failed")
+                        }
+                    })
+                }
+            })
+            discTab.on('select', function(e, dt, type, indexes ){
+                if (type == "row"){
+                    item_id = discTab.rows(indexes).data().pluck('0')[0];
+                    item_name = discTab.rows(indexes).data().pluck('1')[0];
+                    expected =discTab.rows(indexes).data().pluck('2')[0];
+                    openEditDisc(item_id, item_name, expected);
+
+                }
+            })
          });
+
+      
+
         //overlay scripts
-        function openAsnOl(){
+        function openAsnOl(data){
             document.getElementById("overlayASN").style.width="100%";
-        }
+            var tab = $('#asnTable').DataTable();
+            //add data to table
+            tab.rows.add(data).draw();
+        } 
         function closeAsnOl() {
             document.getElementById("overlayASN").style.width="0";
+            var tab = $('#asnTable').DataTable();
+            tab.clear().draw();
         }
+
         function openDiscreOl() {
             document.getElementById("overlayDiscrepancy").style.width="100%";
+            //get data 
+            $.ajax({
+                url: '/receive',
+                type: "POST",
+                data: {"asn_info":"asn_info","asn_id":selAsnId},
+                dataType: "json",
+                success:function(data){
+                    var tab = $('#discreReportTable').DataTable();
+                    tab.rows.add(data["data"]).draw();
+                },
+            })
         }
         function closeDiscreOl() {
             document.getElementById("overlayDiscrepancy").style.width="0";
+            var tab = $('#discreReportTable').DataTable();
+            tab.clear().draw();
         }
-
+        function openEditDisc(item_id, item_name, expected){
+            $("#discRep").modal('show');
+            //display info
+            document.getElementById('item_id').textContent = item_id
+            document.getElementById('item_name').textContent =item_name
+            document.getElementById('expected').textContent = expected            
+        }
+        function submitRep(){
+            item_id = document.getElementById('item_id').textContent
+            item_name = document.getElementById('item_name').textContent
+            note = document.getElementById('reportNote').value
+            expected = document.getElementById('expected').textContent 
+            received= document.getElementById('received').value
+            damaged =document.getElementById('damaged').value
+            $.ajax({
+                url:"/receive",
+                type:"post",
+                data:{"disc_report":"disc", "asn_id":selAsnId,"item_id":item_id, "note":note,"expected": expected,"received": received,"damaged":damaged},
+                success:function(data){
+                    if("success" in data){
+                        alert("Submission successful!")
+                    }
+                    
+                }
+            });
+            $("#discRep").modal('hide');
+        }
+        function confirmRec(){
+            $.ajax({
+                url:"/receive",
+                data:{"receive":"receive", "asn_id": selAsnId},
+                type:"post",
+                success:function(data){
+                    if ("success" in data){
+                        alert("submission successful");
+                    }
+                    else{
+                        alert (data);
+                    }
+                }
+            })
+        }
     </script>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -65,17 +180,21 @@
             text-decoration:none;
         }
         .note{
-            width:100%; 
-            height:15vh; 
-            border:lightgray solid 0.5px; 
+            width: 90%;
+            height:15vh;
+            border:lightgray solid 0.5px;
             border-radius:5px;
         }
+        .modal-backdrop {
+            z-index: -1;
+        }
+
 
 
     </style>
 </head>
 
-<body> 
+<body>
     <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
         <p class="topBarText" style="margin-left:3vw" >Receiving </p>
         <div class="backButton topBarText">
@@ -83,22 +202,14 @@
             <p> Back</p>
             <a href="/main_menu"></a>
         </div>
-    </div>  
+    </div>
     <div class="contentContainer" >
         <p class="contentLabelText">Today's Scheduled Shipments</p>
         <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
-            <table id="shipmentTable" class="display table" >
-                <thead>
-                    <th>Time </th>
-                    <th>Vehicle No</th>
-                    <th>Status</th>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+            <table id="shipmentTable" class="display table" > </table>
         </div>
-        
-       
+
+
     </div>
 
     <!--Overlay for Advance Shipping Notice-->
@@ -108,7 +219,7 @@
             <div class="backButton" onclick="closeAsnOl()">
                 <img src="../../static/imgs/back_icon.png" >
                 <span> Back </span>
-                
+
             </div>
         </div>
         <div class="overlayContentContainer" >
@@ -120,47 +231,9 @@
                     <th>Description</th>
                     <th>Quantity</th>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                        <td>1</td>
-                    </tr>
-                </tbody>
             </table>
-            <div class="button"> <span style="margin-left:5px; margin-right: 2px;">Report Discrepancies</span><a href="" style="display: block;height: 100%;width: 100%;position: absolute;top: 0;left: 0;"></a> </div>
-            <p class ="button" style="align-self:flex-end;"><span style="margin-left:4px; margin-right: 3px; ">Confirm</span></p>
+            <div class="button"> <span style="margin-left:5px; margin-right: 2px;" onclick="openDiscreOl()">Report Discrepancies</div>
+            <p class ="button" style="align-self:flex-end;"><span style="margin-left:4px; margin-right: 3px;" onclick="confirmRec()">Confirm</span></p>
         </div>
 
     </div>
@@ -171,7 +244,7 @@
             <div class="backButton" onclick="closeDiscreOl()">
                 <img src="../../static/imgs/back_icon.png" >
                 <span> Back </span>
-                
+
             </div>
         </div>
         <div class="overlayContentContainer" style="z-index: 3;">
@@ -187,17 +260,58 @@
                 <tbody>
                 </tbody>
             </table>
-            <div>
-                <p class="contentLabelText">Note</p>
-                <textarea name="discrepancyNote" id="reportNote" placeholder="e.g., Describe how items were damaged or what state it was in when received"class="note"></textarea>
-
-            </div>
-            <div class="button" style="align-self:flex-end; margin-top:5px"><span style="margin-left:4px; margin-right: 3px;" >Submit</span></div>
-
-            
         </div>
-    
-   
+        <div class="modal fade bd-example-modal-lg" id="discRep" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel"> Discrepancy Report Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <div cass = "modal-body">
+                    <div class = "container">
+                        <span style="font-weight:700; font-size: 1.1em;">Item info</span>  
+                        <div class="row mb-4">
+                            <div class= "col-sm">Item Id: <span id="item_id"></span></div>
+                            <div class= "col-sm">Item_name: <span id ="item_name"></span></div>
+                            <div class= "col-sm"></div>
+                            <div class= "col-sm"></div>
+
+                        </div>
+                        
+                        <span style="font-weight:700; font-size: 1.1em;">Amount</span> 
+                        <div class="row mb-2">
+                            <div class="col-sm"> Expected Amount: <span id="expected"></span></div>
+                        </div>
+                        <div class="row mb-2" style="width:50%">
+                            <div class="col-sm">Received:</div>
+                            <div class ="col-sm"> <input type="text" id="received">
+                            </div>
+                        </div>
+                        <div class="row" style="width:50%">
+                            <div class="col-sm">Damaged:</div>
+                            <div class ="col-sm"> <input type="text" id="damaged">
+                            </div>
+                        </div>
+                    
+                        <div class="row mb-3">
+                            <span style ="font-size: 1.1em;">Note</span>
+                            <div class="col-sm">
+                                <textarea name="discrepancyNote" id="reportNote" placeholder="e.g., Describe how items were damaged or what state it was in when received"class="note"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="submitRep()">Save Changes</button>
+                    
+                </div>
+              </div>
+            </div>
+          </div>
+
+
 
 </body>
 </html>

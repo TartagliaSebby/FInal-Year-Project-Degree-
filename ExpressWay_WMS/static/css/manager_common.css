@@ -35,7 +35,7 @@
   .sideBar{
     position:fixed;
     left:0;
-    top: 38.4px;
+    top: 44.4px;
     height:100vh;
     border: solid 1px black;
     background-color: rgb(29, 42, 49);
@@ -52,7 +52,7 @@
     /*content*/
   .contentContainer{
     position:relative; 
-    top:38.4px; 
+    top:44.4px; 
     left:204px; 
     width:86%;
     min-width:1200px;
