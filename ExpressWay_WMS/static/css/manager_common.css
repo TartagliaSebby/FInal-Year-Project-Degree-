@@ -18,11 +18,11 @@
     z-index: 5;
   }
   .topBarLogOut{
-    border: solid 2px; 
-    border-radius: 20px; 
+    border: solid 2px;
+    border-radius: 20px;
     margin-bottom: 2px;
-    margin-top:2px; 
-    right:10px; 
+    margin-top:2px;
+    right:10px;
     padding:2px
   }
   .topBarText{
@@ -35,7 +35,7 @@
   .sideBar{
     position:fixed;
     left:0;
-    top: 44.4px;
+    top: 56.35px;
     height:100vh;
     border: solid 1px black;
     background-color: rgb(29, 42, 49);
@@ -51,32 +51,51 @@
   }
     /*content*/
   .contentContainer{
-    position:relative; 
-    top:44.4px; 
-    left:204px; 
+    position:relative;
+    top:55.9px;
+    left:204px;
     width:86%;
     min-width:1200px;
     z-index: -1;
   }
   .contentTopBar{
-    display: flex; 
+    display: flex;
     min-width: 1320px;
     justify-content: space-between;
     z-index: inherit;
   }
   .contentTopBarText{
     font-family:Arial, Helvetica, sans-serif;
-    font-weight: bold; 
+    font-weight: bold;
     font-size:1.7em;
     z-index: inherit;
   }
   .contentTopBarButton{
-    font-size:1em; 
-    border:solid rgb(29, 42, 49); 
+    font-size:1em;
+    border:solid rgb(29, 42, 49);
     padding:4px;
-    border-radius:20px; 
-    height:20px; 
-    background-color:rgb(29, 42, 49); 
+    border-radius:20px;
+    height:20px;
+    background-color:rgb(29, 42, 49);
     color:white;
     z-index: inherit;
   }
+  /*overlay*/
+  .overlayFixed{
+    width: 0;
+    transition: 0.2s;
+    overflow-x: hidden;
+}
+.overlayContentContainer{
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+  width:96%;
+  position:relative;
+  top:5rem
+} 
+.table{
+  border:lightgrey solid 0.5px;
+  font-size: 25px;
+}

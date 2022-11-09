@@ -18,7 +18,7 @@
         //initialise data tables
          $(document).ready( function () {
 
-            var shipTab = $('#shipmentTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,select:'single',
+            var shipTab = $('#shipmentTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":5,select:'single',
             columns:[
                 {title:"asn id"},
                 {title:"Time"},
@@ -43,7 +43,7 @@
                    shipTab.rows.add(data["asn"]).draw()
                 }
             });
-             var asnTab = $('#asnTable').DataTable({"searching":false, "lengthChange":false, "info":false,"pageLength":5,
+             var asnTab = $('#asnTable').DataTable({"searching":false, "lengthChange":false, "info":false,"pageLength":7,
                 //make sure asn table displays at least a min number of rows
                 drawCallback: function(){
                     var api =  $('#asnTable').DataTable();
@@ -99,18 +99,21 @@
         //overlay scripts
         function openAsnOl(data){
             document.getElementById("overlayASN").style.width="100%";
+            document.getElementById("headerASN").style.width="100%";
             var tab = $('#asnTable').DataTable();
             //add data to table
             tab.rows.add(data).draw();
         } 
         function closeAsnOl() {
             document.getElementById("overlayASN").style.width="0";
+            document.getElementById("headerASN").style.width="0";
             var tab = $('#asnTable').DataTable();
             tab.clear().draw();
         }
 
         function openDiscreOl() {
             document.getElementById("overlayDiscrepancy").style.width="100%";
+            document.getElementById("headerDisc").style.width="100%";
             //get data 
             $.ajax({
                 url: '/receive',
@@ -125,6 +128,7 @@
         }
         function closeDiscreOl() {
             document.getElementById("overlayDiscrepancy").style.width="0";
+            document.getElementById("headerDisc").style.width="0";
             var tab = $('#discreReportTable').DataTable();
             tab.clear().draw();
         }
@@ -188,23 +192,29 @@
         .modal-backdrop {
             z-index: -1;
         }
-
+        .overlayFixed{
+            width: 0;
+            transition: 0.2s;
+            overflow-x: hidden;
+        }
 
 
     </style>
 </head>
 
 <body>
-    <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
-        <p class="topBarText" style="margin-left:3vw" >Receiving </p>
-        <div class="backButton topBarText">
-            <img src="../../static/imgs/back_icon(white).png" height="40px">
-            <p> Back</p>
-            <a href="/main_menu"></a>
+    <header class = "navbar navbar-dark fixed-top " style="background-color:rgb(29, 42, 49); z-index: 10;">
+        <div class="container-fluid">
+          <a href=""class="navbar-brand" style="color: white;"> <strong>Receiving</strong> </a>
+            <a href="/main_menu" class="topBarText btn btn-light btn-lg">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                Back
+            </a>
         </div>
-    </div>
+    </header>
+
     <div class="contentContainer" >
-        <p class="contentLabelText">Today's Scheduled Shipments</p>
+        <p class="contentLabelText " style="margin-top: 3%; margin-left: 2%;">Today's Scheduled Shipments</p>
         <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
             <table id="shipmentTable" class="display table" > </table>
         </div>
@@ -212,43 +222,42 @@
 
     </div>
 
-    <!--Overlay for Advance Shipping Notice-->
-    <div id="overlayASN" class="overlayContainer">
-        <div class="topBarText  overlayTopBar ">
-            <span style="margin-left: 3vw;">Advance Shipping Notice</span>
-            <div class="backButton" onclick="closeAsnOl()">
-                <img src="../../static/imgs/back_icon.png" >
-                <span> Back </span>
-
+    <!--Overlay for Advance Shipping Notice--> 
+    <div class="overlayContentContainer" >
+        <div id="overlayASN" class="overlayContainer" style="z-index: 11;">
+            <header class = "navbar navbar-light fixed-top overlayFixed" id="headerASN" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);background-color: white;">
+                <div class="container-fluid">
+                    <span class="navbar-brand" > <strong>Advance Shipping Notice</strong> </span>
+                    <button class="btn btn-close" onclick="closeAsnOl()"></button>
+                </div>
+            </header>
+            <div style="position: relative; top: 5rem;">
+                <p class="contentLabelText" style="margin-top: 3%; margin-left: 2%;">Items Shipped</p>
+                <table id="asnTable" class="display table" >
+                    <thead>
+                        <th>id</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                    </thead>
+                </table>
+                <div class="d-flex justify-content-between ml-3" style="width:95%; margin-left:auto; margin-right:auto">
+                    <button class="btn btn-dark" style="background-color: rgb(29, 42, 49);" onclick="openDiscreOl()">Report Discrepancies</button>
+                    <button class="btn btn-success"  onclick="confirmRec()">Confirm</button>
+                </div>
             </div>
         </div>
-        <div class="overlayContentContainer" >
-            <p class="contentLabelText">Items Shipped</p>
-            <table id="asnTable" class="display table" >
-                <thead>
-                    <th>id</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Quantity</th>
-                </thead>
-            </table>
-            <div class="button"> <span style="margin-left:5px; margin-right: 2px;" onclick="openDiscreOl()">Report Discrepancies</div>
-            <p class ="button" style="align-self:flex-end;"><span style="margin-left:4px; margin-right: 3px;" onclick="confirmRec()">Confirm</span></p>
-        </div>
-
     </div>
     <!--Overlay for Discrepancy Report-->
-    <div id="overlayDiscrepancy" class="overlayContainer">
-        <div class="topBarText  overlayTopBar ">
-            <span style="margin-left: 3vw;">Discrepancy Report</span>
-            <div class="backButton" onclick="closeDiscreOl()">
-                <img src="../../static/imgs/back_icon.png" >
-                <span> Back </span>
-
+    <div id="overlayDiscrepancy" class="overlayContainer"  style="z-index: 12;">
+        <header class = "navbar navbar-light fixed-top overlayFixed" id="headerDisc" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);background-color: white;">
+            <div class="container-fluid">
+              <span href=""class="navbar-brand" > <strong>Discrepancy Report</strong> </span>
+                <button class="btn btn-close" onclick="closeDiscreOl()"></button>
             </div>
-        </div>
-        <div class="overlayContentContainer" style="z-index: 3;">
-            <p class="contentLabelText">Items Shipped</p>
+        </header>
+        <div class="overlayContentContainer" style="position:relative;top:5rem">
+            <p class="contentLabelText" style="margin-top: 3%; margin-left: 2%;">Items Shipped</p>
             <table id="discreReportTable" class="display table" >
                 <thead>
                     <th>id</th>
@@ -260,57 +269,56 @@
                 <tbody>
                 </tbody>
             </table>
-        </div>
-        <div class="modal fade bd-example-modal-lg" id="discRep" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-              <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalLabel"> Discrepancy Report Form</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div cass = "modal-body">
-                    <div class = "container">
-                        <span style="font-weight:700; font-size: 1.1em;">Item info</span>  
-                        <div class="row mb-4">
-                            <div class= "col-sm">Item Id: <span id="item_id"></span></div>
-                            <div class= "col-sm">Item_name: <span id ="item_name"></span></div>
-                            <div class= "col-sm"></div>
-                            <div class= "col-sm"></div>
+        </div>    
+    </div>
+    <div class="modal fade bd-example-modal-lg" id="discRep" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel"> Discrepancy Report Form</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div cass = "modal-body">
+                <div class = "container">
+                    <span style="font-weight:700; font-size: 1.1em;">Item info</span>  
+                    <div class="row mb-4">
+                        <div class= "col-sm">Item Id: <span id="item_id"></span></div>
+                        <div class= "col-sm">Item_name: <span id ="item_name"></span></div>
+                        <div class= "col-sm"></div>
+                        <div class= "col-sm"></div>
 
-                        </div>
-                        
-                        <span style="font-weight:700; font-size: 1.1em;">Amount</span> 
-                        <div class="row mb-2">
-                            <div class="col-sm"> Expected Amount: <span id="expected"></span></div>
-                        </div>
-                        <div class="row mb-2" style="width:50%">
-                            <div class="col-sm">Received:</div>
-                            <div class ="col-sm"> <input type="text" id="received">
-                            </div>
-                        </div>
-                        <div class="row" style="width:50%">
-                            <div class="col-sm">Damaged:</div>
-                            <div class ="col-sm"> <input type="text" id="damaged">
-                            </div>
-                        </div>
+                    </div>
                     
-                        <div class="row mb-3">
-                            <span style ="font-size: 1.1em;">Note</span>
-                            <div class="col-sm">
-                                <textarea name="discrepancyNote" id="reportNote" placeholder="e.g., Describe how items were damaged or what state it was in when received"class="note"></textarea>
-                            </div>
+                    <span style="font-weight:700; font-size: 1.1em;">Amount</span> 
+                    <div class="row mb-2">
+                        <div class="col-sm"> Expected Amount: <span id="expected"></span></div>
+                    </div>
+                    <div class="row mb-2" style="width:50%">
+                        <div class="col-sm">Received:</div>
+                        <div class ="col-sm"> <input type="text" id="received">
+                        </div>
+                    </div>
+                    <div class="row" style="width:50%">
+                        <div class="col-sm">Damaged:</div>
+                        <div class ="col-sm"> <input type="text" id="damaged">
+                        </div>
+                    </div>
+                
+                    <div class="row mb-3">
+                        <span style ="font-size: 1.1em;">Note</span>
+                        <div class="col-sm">
+                            <textarea name="discrepancyNote" id="reportNote" placeholder="e.g., Describe how items were damaged or what state it was in when received"class="note"></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="submitRep()">Save Changes</button>
-                    
-                </div>
-              </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="submitRep()">Save Changes</button>
+                
             </div>
           </div>
-
+        </div>
 
 
 </body>

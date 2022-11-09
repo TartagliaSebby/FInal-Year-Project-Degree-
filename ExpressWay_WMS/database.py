@@ -117,7 +117,6 @@ class shift(db.Model):
 class assigned_orders(db.Model):
     order_id = db.Column(mysql.INTEGER(7), db.ForeignKey(orders.order_id), primary_key = True)
     emp_id = db.Column(mysql.INTEGER(4), db.ForeignKey(employee.emp_id), primary_key = True)
-    packing_station = db.Column(mysql.INTEGER(2))
     employee = relationship("employee", backref = "assigned_orders")
     orders = relationship("orders", backref="assigned_orders")
 

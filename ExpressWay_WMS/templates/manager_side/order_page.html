@@ -63,6 +63,7 @@ $(document).ready( function () {
 function openOL(data){
         //open overlay
         document.getElementById("overlayOrder").style.width="100%";
+        document.getElementById("headerOrder").style.width="100%";
         //update overlay interface with data retrieved from post
         var olData = data.overlay
         var tableData = data.table
@@ -77,6 +78,7 @@ function openOL(data){
       }
 function closeOL(){
         document.getElementById("overlayOrder").style.width="0";
+        document.getElementById("headerOrder").style.width="0";
         //clear data table
         var tab = $('#orderItemsTable').DataTable();
         tab.clear().draw();
@@ -124,34 +126,38 @@ function closeOL(){
 <div style="display:flex; flex-direction: column;">
         <div class="contentTopBar">
             <p class="contentTopBarText">Orders</p>
-            <p class="contentTopBarText contentTopBarButton">Import </p>
         </div>
 
         <!--table-->
-        <table id="orderTable" class="display"></table>
-      </div>
+        <table id="orderTable" class="display table"></table>
+</div>
 {% endblock %}
 
 {% block externalContent%}
 <!--overlay for ASN-->
-  <div id="overlayOrder" class="overlayContainer">
-    <div class="overlayTopBar">
-      <span style="position:absolute; left: 20px;">Order Items</span>
-      <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeOL()">Back</span>
-    </div>
-    <p style="margin-left: 7px; margin-bottom: 5px; font-size: 1.5em; font-weight: 700;">Status: <span id = "status"></span></p>
-    <div class="orderInfoGrid"style="font-size:1.3em">
-      <p style="grid-row-start: 1;">Order id: </p>
-      <p style="grid-row-start: 2;">Customer Name:</p>
-      <p style="grid-row-start: 3;">Date:</p>
-      <!--cells to be filled with data from database-->
-      <p id="orderID" style="grid-row-start: 1; grid-column-start:2"></p>
-      <p id="customerName" style="grid-row-start: 2; grid-column-start:2"></p>
-      <p id="date" style="grid-row-start: 3; grid-row-end: 5; grid-column-start:2"></p>
+  <div id="overlayOrder" class="overlayContainer" style="z-index: 11;">
+    <header class = "navbar navbar-light fixed-top overlayFixed" id="headerOrder" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);">
+      <div class="container-fluid">
+        <span href=""class="navbar-brand" > <strong>Order Items</strong> </span>
+          <button class="btn btn-close" onclick="closeOL()"></button>
+      </div>
+    </header>
+    <div class="overlayContentContainer">
+      <p class="h1" style="margin-left: 7px; margin-bottom: 5px; font-weight: 700;">Status: <span id = "status"></span></p>
+      <div class="orderInfoGrid h2">
+        <p style="grid-row-start: 1;">Order id: </p>
+        <p style="grid-row-start: 2;">Customer Name:</p>
+        <p style="grid-row-start: 3;">Date:</p>
+        <!--cells to be filled with data from database-->
+        <p id="orderID" style="grid-row-start: 1; grid-column-start:2"></p>
+        <p id="customerName" style="grid-row-start: 2; grid-column-start:2"></p>
+        <p id="date" style="grid-row-start: 3; grid-row-end: 5; grid-column-start:2"></p>
 
+      </div>
+      <p style="margin-left:10px; font-size:1.5em; font-weight: 700; ">Items</p>
+      <table id="orderItemsTable" class="display table"></table>
     </div>
-    <p style="margin-left:10px; font-size:1.5em; font-weight: 700; ">Items</p>
-    <table id="orderItemsTable" class="display"></table>
+    
   </div>
 
 {% endblock %}

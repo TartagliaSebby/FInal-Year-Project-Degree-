@@ -1,13 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> </title> 
+    <title>Inventory Count</title> 
     <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <!--libraries-->
     <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
     <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
     <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+
     <script>
+        /*$(document).ready(function(){
+            $("#noItmToast").toast('show');
+            $("#successToast").toast('show');
+        });*/
+        function chkInv(){
+            loc  = document.getElementById("binlocation").value;
+            $.ajax({
+                url:"/inventoryCount",
+                data:{"chkInv":"chkInv", "location":loc},
+                type:"post",
+                dataType:"json",
+                success:function(data){
+                    if ("success" in data){
+                        document.getElementById("location").textContent = data["location"];
+                        document.getElementById("item_id").textContent = data["item_id"];
+                        document.getElementById("quantity").textContent = data["quantity"];
+                        showModal();
+                    }
+                    else if("no item" in data){
+                        showNoItmToast();
+                    }
+                }
+            });
+        }
+        
+        function sendCountUpdate(){
+            loc = document.getElementById("binlocation").value
+            quantity = document.getElementById("countQuantity").value
+
+            $.ajax({
+                url:"/inventoryCount",
+                data:{"update_inv":"update_inv", "location":loc,"quantity":quantity},
+                type:"post",
+                dataType:"json",
+                success:function(){
+                    closeModal();
+                    showSuccessToast();
+                    
+                }
+            });
+        }
+        function showModal(){
+            $('#count').modal('show')
+            document.getElementById("countQuantity").value = ""
+        }
+        function closeModal(){
+            $('#count').modal('hide')
+        }
+        function showNoItmToast(){
+            
+            var t = document.getElementById("noItmToast");
+            var bsT = new bootstrap.Toast(t);
+            bsT.show()
+            alert("No items in location!")
+        }
+        function showSuccessToast(){
+            var t = document.getElementById("successToast");
+            var bsT = new bootstrap.Toast(t);
+            bsT.show()
+            alert("items succefully updated")
+        }
 
 
     </script>
@@ -19,22 +84,102 @@
 </head>
 
 <body> 
-    <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
-        <p class="topBarText" style="margin-left:3vw" >Loading</p>
-        <div class="backButton topBarText">
-            <img src="../../static/imgs/back_icon(white).png" height="40px">
-            <p> Back</p>
-            <a href="/main_menu"></a>
+    <header class = "navbar navbar-dark fixed-top " style="background-color:rgb(29, 42, 49); z-index: 10;">
+        <div class="container-fluid">
+          <a href=""class="navbar-brand" style="color: white;"> <strong>inventory Count</strong> </a>
+            <a href="/main_menu" class="topBarText btn btn-light btn-lg">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                Back
+            </a>
         </div>
-    </div>  
+    </header>
     <div class="contentContainer" style="align-items: center;">
-        <p class="contentLabelText" style="color:grey">To begin counting please scan the QR code on the bin location</p>
-        <img src="../../static/imgs/QR_icon.png" alt="Scan QR code icon" style="width:30vw; height: 30vw; margin-top: 10px; margin-bottom: 5px;">       
-        <p class="button" ><span style="margin-left: 5px; margin-right: 5px; padding:5px">Scan QR</span> </p>
+        
+        <div class="container" style="width:70%">
+            <div class="row">
+                <div class="col h1 ">
+                    <p class="contentLabelText" style="color:grey">To begin enter the bin location of the item</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-2 h2"> <strong>bin location</strong> </div>
+                <div class="col-3 h2"> <input type="text" name="" id="binlocation" style="width:100%"></div>
+                <div class="col-3">
+                    <button class="btn btn-primary"  onclick="chkInv()"> Check Inventory</button>
+                </div>
+                <div class="col-1"></div>
+            </div>
+
+        </div>
     </div>
 
+    <div class="modal fade bd-example-modal-lg" id="count" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel"><strong>Inventory Count  Info</strong> </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div cass = "modal-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-2 h2 ">Location </div>
+                        <div class="col h2 text-start">: <span id = "location"></span></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-2 h2 ">Item id</div>
+                        <div class="col h2 text-start">: <span id="item_id"></span></div>
+                    </div>
+                    <hr>
+                    <div class = "row mb-2">
+                        <div class="col"></div>
+                        <div class="col"><strong>Inventory</strong> </div>
+                        <div class="col"><strong>Count</strong> </div>
+                    </div>
+                    <div class="row">
+                        <div class="col h2"> Quantity </div>
+                        <div class="col h2"> <span id ="quantity"></span></div>
+                        <div class="col"><input type="text" id="countQuantity" ></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-seconadry" onclick="closeModal()"> Cancel</button>
+                <button class="btn btn-primary" onclick="sendCountUpdate()"> Confirm</button>
+            </div>
+        </div>
+    </div>
+    <!--toast notifications-->
+    <div class="toast fixed-top m-5 ms-auto" role="alert" id="noItmToast">
+        <div class="toast-header">
+            <i class="bi bi-terminal-x"></i>
+            <strong class="me-auto"> No items in location! </strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"> </button>
+        </div>
+    </div>
+    <div class="toast fixed-top m-5 ms-auto" role="alert"  id="successToast">
+        <div class="toat-header">
+            <i class="bi bi-terminal-x"></i>
+            <strong class="me-auto"> Item Count successfully updated</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"> </button>
+        </div>
+    </div>
 
-
+    
+    <div id="toastNotice" class="toast">
+        <div class="toast-header">
+          <strong class="mr-auto">Bootstrap</strong>
+          <small>11 mins ago</small>
+          <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="toast-body">
+          Hello, world! This is a toast message.
+        </div>
+      </div>
 </body>
 </html>
 

@@ -45,6 +45,7 @@ $(document).ready( function () {
 //overlay functions
 function openOL(data){
         document.getElementById("overlayASN").style.width="100%";
+        document.getElementById("headerAsn").style.width="100%";
         //update overlay interface with data retrieved from post
         var olData = data.overlay
         var tableData = data.table
@@ -60,7 +61,7 @@ function openOL(data){
     }
 function closeOL(){
         document.getElementById("overlayASN").style.width="0";
-        //TEMP!!!!!!!!!!!!!!!!
+        document.getElementById("headerAsn").style.width="0%";
         var tab = $('#shippedTable').DataTable();
         tab.clear().draw();
       }
@@ -105,50 +106,49 @@ function closeOL(){
 
 {% block content%}
 <div style="display:flex; flex-direction: column;">
-        <div class="contentTopBar">
-            <p class="contentTopBarText">Inbound Shipments</p>
-            <p class="contentTopBarText contentTopBarButton">Import </p>
-        </div>
-
-        <!--table-->
-        <table id="inShipmentTable" class="display"></table>
-      </div>
+  <div class="contentTopBar">
+    <p class="contentTopBarText">Inbound Shipments</p>
+  </div>
+  <!--table-->
+  <table id="inShipmentTable" class="display table mt-2"></table>
+</div>
 {% endblock %}
 
-{% block externalContent  %}
-<div id="overlayASN" class="overlayContainer">
-        <div class="overlayTopBar">
-        <span style="position:absolute; left: 20px;">Advance Shipping Notice</span>
-        <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeOL()">Back</span>
-        </div>
-        <div class="ASNInfoGrid">
-            <p style="grid-row-start: 1;">Shipment No</p>
-            <p style="grid-row-start: 2;">Seller id</p>
-            <p style="grid-row-start: 3;">Seller Name</p>
-            <p style="grid-row-start: 4;">Shipment Type</p>
+{% block externalContent %}
+<div id="overlayASN" class="overlayContainer" style="z-index: 11;">
+  <header class = "navbar navbar-light fixed-top overlayFixed" id="headerAsn" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);">
+    <div class="container-fluid">
+      <span href=""class="navbar-brand" > <strong>Advance Shipping Notice</strong> </span>
+        <button class="btn btn-close" onclick="closeOL()"></button>
+    </div>
+  </header>
+  <div class="overlayContentContainer">
+    <div class="ASNInfoGrid h2">
+      <p style="grid-row-start: 1;">Shipment No</p>
+      <p style="grid-row-start: 2;">Seller id</p>
+      <p style="grid-row-start: 3;">Seller Name</p>
+      <p style="grid-row-start: 4;">Shipment Type</p>
 
-            <p style="grid-row-start: 1;grid-column-start:3 ;">Arrival Date</p>
-            <p style="grid-row-start: 2;grid-column-start:3 ;">Arrival Time</p>
-            <!--cells to be filled with data from the database-->
-            <p id="shipmentNo" style="grid-row-start: 1;grid-column-start:2 ;"></p>
-            <p id="sellerID" style="grid-row-start: 2;grid-column-start:2 ;"></p>
-            <p id="sellerName" style="grid-row-start: 3;grid-column-start:2 ;"></p></p>
-            <p id="shipmentType" style="grid-row-start: 4;grid-column-start:2 ;"></p></p>
-            <p id="arrivalTime" style="grid-row-start: 1;grid-column-start:4 ;"></p></p>
-            <p id="arrivalDate" style="grid-row-start: 2;grid-column-start:4 ;"></p></p>
-        </div>
-        <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items Shipped</p>
-        <table id="shippedTable" class="display">
-            <thead>
-                <th>SKU</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Quantity</th>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+      <p style="grid-row-start: 1;grid-column-start:3 ;">Arrival Date</p>
+      <p style="grid-row-start: 2;grid-column-start:3 ;">Arrival Time</p>
+      
+      <p id="shipmentNo" style="grid-row-start: 1;grid-column-start:2 ;"></p>
+      <p id="sellerID" style="grid-row-start: 2;grid-column-start:2 ;"></p>
+      <p id="sellerName" style="grid-row-start: 3;grid-column-start:2 ;"></p></p>
+      <p id="shipmentType" style="grid-row-start: 4;grid-column-start:2 ;"></p></p>
+      <p id="arrivalTime" style="grid-row-start: 1;grid-column-start:4 ;"></p></p>
+      <p id="arrivalDate" style="grid-row-start: 2;grid-column-start:4 ;"></p></p>
+    </div>
+    <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items Shipped</p>
+    <table id="shippedTable" class="display table">
+        <thead>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Quantity</th>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
   </div>
-
-   <button onclick="openOL()" style="position: fixed; right:500px; top:500px">button</button>
 {% endblock %}

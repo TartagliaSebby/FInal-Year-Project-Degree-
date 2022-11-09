@@ -217,3 +217,34 @@ select ri.item_id, i.item_name, ri.location
 from received_items ri, item i
 where ri.item_id = i.item_id
 
+#picking page tab 1
+
+select oi.order_id, count(oi.item_id)
+from assigned_orders ao, order_item oi
+where ao.order_id = oi.order_id
+and emp_id ={}
+group by order_id
+
+#picking page tab 2
+select i.item_id, i.item_name, o.quantity
+from item i, order_item o
+where i.item_id = o.item_id
+and o.order_id =  {}
+
+select i.item_id, i.item_name, o.quantity from item i, order_item o where i.item_id = o.item_id and o.order_id =  {}
+
+# packing page tab 1
+select oi.order_id, count(oi.item_id) as items, sum(i.weight) as weight
+from assigned_orders ao, order_item oi, item i
+where ao.order_id = oi.order_id
+and oi.item_id = i.item_id
+group by oi.order_id;
+
+select o.order_id, count(oi.item_id) as items, sum(i.weight) as weight from orders o, order_item oi, item i where o.order_id = oi.order_id and oi.item_id = i.item_id and o.order_status = "picking" group by o.order_id;
+#packing page tab 2
+select oi.item_id, oi.quantity, i.weight
+from order_item oi, item i
+where oi.item_id = i.item_id
+and oi.order_id = {}
+
+select oi.item_id, oi.quantity, i.weight from order_item oi, item i where oi.item_id = i.item_id and oi.order_id = {}

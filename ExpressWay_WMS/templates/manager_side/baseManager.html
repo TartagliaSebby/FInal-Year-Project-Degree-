@@ -13,6 +13,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
 
     <!-- for additional external libraries-->
     {% block external_libraries %}{% endblock %}
@@ -29,61 +30,47 @@
   </style>
 </head>
 <body>
-    
-    <header class="topBar">
-        <a class="topBarText" style ="left:19px;" href="/dashboard">ExpressWay</a>
-        <div style="display:flex;"> 
-          <p class="topBarText topBarLogOut">Log Out</p>
-        </div>
+    <header class = "navbar navbar-light fixed-top " style="background-color:white; border-bottom: black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77); z-index:10;">
+      <div class="container-fluid">
+        <a href="/dashboard" class="navbar-brand"> <strong>ExpressWay</strong> </a>
+        <a href="/logout" class="topBarText btn btn-dark btn-border-radius-sm btn-sm"> Log Out</a>
+      </div>
     </header>
     <div style ="height:10px;">
         <div class="d-flex flex-column flex-shrink-0 p-3 bg-dark sideBar" style="width: 200px;">
-            <ul class="nav nav-pills flex-column mb-auto">
+            <ul class="nav nav-pills flex-column mb-auto h4">
               <li class="nav-item">
                 <a href="/dashboard" class="nav-link text-white" aria-current="page">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#home"></use></svg>
                   <strong>Dashboard</strong> 
                 </a>
               </li>
               <li>
                 <a href="/orders" class="nav-link text-white">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#speedometer2"></use></svg>
                   <strong>Orders</strong>
                 </a>
               </li>
               <li>
                 <a href="/inventory" class="nav-link text-white">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#table"></use></svg>
                     <strong>Inventory</strong>
                 </a>
               </li>
               <li>
                 <a href="/inbound_shipments" class="nav-link text-white">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#grid"></use></svg>
                   <strong>Inbound </strong>
                 </a>
               </li>
               <li>
-                <a href="/receive_discrepancies" class="nav-link text-white">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#people-circle"></use></svg>
+                <a href="/receive_discrepancies" class="nav-link text-white">                  
                   <strong>Discrepancy</strong>
                 </a>
               </li>
               <li>
-                <a href="/deliveries" class="nav-link text-white">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#people-circle"></use></svg>
-                  <strong>Deliveries</strong>
-                </a>
-              </li>
-              <li>
                 <a href="/job_assignment" class="nav-link text-white">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#people-circle"></use></svg>
                   <strong>Tasks</strong>
                 </a>
               </li>
               <li>
                 <a href="/employees" class="nav-link text-white">
-                  <svg class="bi me-2" width="20" height="20"><use xlink:href="#people-circle"></use></svg>
                   <strong>Employees</strong>
                 </a>
               </li>

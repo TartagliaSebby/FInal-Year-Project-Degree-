@@ -33,31 +33,14 @@
     {% with msgs = get_flashed_messages() %}
     {%if msgs%}
         {%for msg in msgs%}
-            <p style ="background-color: blanchedalmond;">{{msg}}</p>
+            <p style ="background-color: blanchedalmond;text-align:center;">{{msg}}</p>
         {%endfor%}
     {%endif%}
     {%endwith%}
 </head>
 
 <body style="background-color:lightblue ;"> 
-    <!--
-    <div style="top:40%;position:absolute; display:flex; width:100%">
-        <div style="margin-left: auto; margin-right: auto;">
-            <table>
-                <tr> <td colspan="2">ExpressWay WMS Login</td></tr>
-                <tr>
-                    <td> User Name:</td>
-                    <td><input type="text" name="emp_id" id="id_field"></td>
-                </tr>
-                <tr>
-                    <td>Password:</td>
-                    <td><input type="text" name="password" id="pass_field"></td>
-                </tr>
-            </table>
-            <button onclick="sendLoginDetails">
-        </div>
-    </div>
--->
+
     <form action="{{url_for('login_page')}}" method="post">
         <div style="margin:auto; width: 50%;">
             <div class="row mb-6">

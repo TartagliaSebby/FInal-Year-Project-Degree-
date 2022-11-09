@@ -175,3 +175,5 @@ select distinct e.item_id, SUM(e.quantity) from item_location e right outer join
 
 
 INSERT INTO pick_list VALUES(8008,"{'0': "{'item_id': 107832, 'location': '01-A-5-L3-2', 'quantity': 2}"}")
+
+insert into received_items values(102352,0, 1,"01-A-5-L1-2");

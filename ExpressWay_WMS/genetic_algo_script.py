@@ -4,7 +4,7 @@ import pygad
 #from sqlalchemy.engine.row import LegacyRow
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text,select,delete, update
-from database import db, orders, pick_list
+from database import db, orders, pick_list,assigned_orders
 from sqlalchemy.orm import sessionmaker, Session
 import json
 
@@ -20,6 +20,15 @@ engine = db.create_engine(SQLALCHEMY_DATABASE_URI,{"pool_recycle": 299})
 session = sessionmaker(bind=engine)
 Session =session()
 
+
+#daily maintenance of the tables (deleting temporary tables)
+with engine.connect() as connection:
+    connection.execute(text("delete from assigned_orders where 1=1"))
+    connection.execute(text("delete from instruction where 1=1"))
+    connection.execute(text("delete from received_items where 1=1"))
+    connection.execute(text("delete from pick_list where 1=1"))
+
+# genetic algorithm part
 class Item():
     def __init__(self, itemId, location, quantity):
         self.itemId = itemId
@@ -200,18 +209,7 @@ def fitness_func(solution, solution_idx):
             itemsList.extend(order.items)
         sortItems(itemsList)
         distance += calculateDist(itemsList)
-    """
-    #calculate variance of number of items in each pick list
-    numOfItems = []
-    for pickList in splitedOrd:
-        totalItems = 0
-        for order in pickList:
-            for item in order.items:
-                totalItems += item.quantity
-        numOfItems.append(totalItems)
-    variance = numpy.var(numOfItems)
-    """
-    fitness = -distance #+ (1/variance)
+    fitness = -distance
     return fitness
 
 #variables to tweak to optimise Genetic Algo
@@ -240,16 +238,20 @@ ga_instance = pygad.GA(num_generations=num_generations,
                     )
 ga_instance.run()
 #clear old pickList and store new pick_list
-#db.session.execute(delete(pick_list).where(1==1))
 with engine.connect() as conn:
     conn.execute(("delete from pick_list where 1=1"))
 ind_sol =ga_instance.best_solutions[ga_instance.best_solution_generation]
 splitedAssigned = splitOrders(orderList, numOfEmp)
 x=0
+y=0
 for pickList in splitedAssigned:
+
     itemsinList =[]
     for order in pickList:
+        Session.add(assigned_orders(order_id = order.orderId, emp_id = employeeList[x]))
+        Session.commit()
         itemsinList+= order.items
+    x+=1
     sortItems(itemsinList)
     FPickList={}
     i=0
@@ -257,21 +259,11 @@ for pickList in splitedAssigned:
         FPickList[str(i)] ={"item_id":item.itemId, "location":item.location, "quantity": item.quantity}
         i+=1
         #picklists contain item_id quantity and location and //order id  
-    pl = pick_list(emp_id = employeeList[x], pick_list = FPickList)
-    x+=1
+    pl = pick_list(emp_id = employeeList[y], pick_list = FPickList)
+    y+=1
     Session.add(pl)
     Session.commit()
     Session.close
-    """
-    with engine.connect() as conn:
-        conn.execute(text("INSERT INTO pick_list VALUES({},\"{}\")".format(employeeList[x], FPickList)))
-    """
-    """
-    with Session.begin() as session:
-        pl = pick_list(emp_id = employeeList[x], pick_list = FPickList)
-        session.add(pl)
-        session.commit()
-    """
-
-
-
+# update assigned order status to "picking"
+with engine.connect() as connection:
+    connection.execute(text("update orders set order_status = 'picking' where order_id in({})".format(ordersJson["order_id"])))

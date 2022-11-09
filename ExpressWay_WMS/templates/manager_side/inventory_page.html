@@ -50,13 +50,14 @@ function openOL(data){
   var olData = data.overlay
   var tableData = data.table
   document.getElementById("overlayItems").style.width="100%";
+  document.getElementById("headerItemInfo").style.width="100%";
 
   document.getElementById("itemID").textContent =  olData.item_id
   document.getElementById("sellerID").textContent = olData.seller_id
   document.getElementById("weight").textContent = olData.weight
   document.getElementById("desc").textContent = olData.item_desc
   document.getElementById("itemName").textContent = olData.item_name
-  //TEMP!!!!!!!!!!!!!!!
+
   var tab = $('#locationTable').DataTable();
   var tableDataFinal = [];
   var count=1;
@@ -66,6 +67,7 @@ function openOL(data){
     rowArr = rowArr.concat( tableData[i].location.split("-"))
     rowArr.push(tableData[i].quantity)
     tableDataFinal.push(rowArr)
+    count+=1
 
   }
 
@@ -73,7 +75,7 @@ function openOL(data){
       }
 function closeOL(){
   document.getElementById("overlayItems").style.width="0";
-  //TEMP!!!!!!!!!!!!!!!!
+  document.getElementById("headerItemInfo").style.width="0";
   var tab = $('#locationTable').DataTable();
   tab.clear().draw();
       }
@@ -121,46 +123,51 @@ function closeOL(){
         </div>
 
         <!--table-->
-        <table id="inventoryTable" class="display"></table>
+        <table id="inventoryTable" class="display table"></table>
       </div>
 {% endblock%}
 
 {%block externalContent %}
 <!--overlay -->
-    <div id="overlayItems" class="overlayContainer">
-      <div class="overlayTopBar">
-        <span style="position:absolute; left: 20px;">Item Information</span>
-        <span style="position:absolute; right: 20px; border:solid black 0.5px; padding:3px; cursor:pointer" onclick="closeOL()">Back</span>
+    <div id="overlayItems" class="overlayContainer" style="z-index: 11;">
+      <header class = "navbar navbar-light fixed-top overlayFixed" id="headerItemInfo" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);">
+        <div class="container-fluid">
+          <span href=""class="navbar-brand" > <strong>Item Information</strong> </span>
+            <button class="btn btn-close" onclick="closeOL()"></button>
+        </div>
+      </header>
+      <div class="overlayContentContainer">
+        <div>
+            <p class="h2 mb-4" id="itemName" style="font-weight:700"></p>
+        </div>
+        <div class="itemInfoGrid h2">
+          <p style="grid-row-start: 1;">Item id</p>
+          <p style="grid-row-start: 2;">Seller id</p>
+          <p style="grid-row-start: 3;">Weight per Unit</p>
+          <p style="grid-row-start: 4;">Item desc</p>
+          <!--cells to be filled with data from database-->
+          <p id="itemID" style="grid-row-start: 1; grid-column-start:2 ;"></p>
+          <p id="sellerID" style="grid-row-start: 2; grid-column-start:2 ;"></p>
+          <p id="weight" style="grid-row-start: 3; grid-column-start:2 ;"></p>
+          <p id="desc" style="grid-row-start: 4; grid-row-end: 6;grid-column-start:2 ;"></p>
+        </div>
+        <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items Locations</p>
+        <table id="locationTable" class="display table">
+          <thead>
+            <th>No</th>
+            <th>Aisle</th>
+            <th>Rack</th>
+            <th>Bay</th>
+            <th>Level</th>
+            <th>Bin</th>
+            <th>Quantity</th>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
       </div>
-      <div >
-          <p id="itemName" style="font-size: 1.5em;font-weight:700;margin-left:10px; margin-top:10px"></p>
-      </div>
-      <div class="itemInfoGrid" style="font-size:1.3em;">
-        <p style="grid-row-start: 1;">Item id</p>
-        <p style="grid-row-start: 2;">Seller id</p>
-        <p style="grid-row-start: 3;">Weight per Unit</p>
-        <p style="grid-row-start: 4;">Item desc</p>
-        <!--cells to be filled with data from database-->
-        <p id="itemID" style="grid-row-start: 1; grid-column-start:2 ;"></p>
-        <p id="sellerID" style="grid-row-start: 2; grid-column-start:2 ;"></p>
-        <p id="weight" style="grid-row-start: 3; grid-column-start:2 ;"></p>
-        <p id="desc" style="grid-row-start: 4; grid-row-end: 6;grid-column-start:2 ;"></p>
-      </div>
-      <p style="margin-left:10px; font-size:1.5em; font-weight: 700;">Items Locations</p>
-      <table id="locationTable" class="display">
-        <thead>
-          <th>No</th>
-          <th>Aisle</th>
-          <th>Rack</th>
-          <th>Bay</th>
-          <th>Level</th>
-          <th>Bin</th>
-          <th>Quantity</th>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+
+
     </div>
   </div>
-<button onclick="openOL()" style="position: fixed; right:500px; top:500px">button</button>
 {% endblock %}

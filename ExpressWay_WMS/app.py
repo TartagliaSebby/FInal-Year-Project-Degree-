@@ -15,7 +15,7 @@ import json
 app = Flask(__name__)
 app.secret_key = "FYP"
 app.config['JSON_SORT_KEYS'] = False
-app.permanent_session_lifetime = timedelta(minutes=1)
+app.permanent_session_lifetime = timedelta(hours=3)
 
 #database connection
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
@@ -40,13 +40,15 @@ def manager_login(x):
     @wraps(x)
     def decorated_function(*args, **kwargs):
         if session.get("logged_in") is None or session.get("authorisation") != "manager":
+            flash("Please Log in!")
             return render_template("login_page.html")
         return x(*args, **kwargs)
     return decorated_function
 def emp_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("logged_in") is None or session.get("authorisation") != "employee":
+        if session.get("logged_in") is None or session.get("authorisation") != "worker":
+            flash("Please Log in!")
             return render_template("login_page.html")
         return f(*args, **kwargs)
     return decorated_function
@@ -63,22 +65,18 @@ def login_page():
         employee_info = db.session.execute(select(employee.password, employee.position).where(employee.emp_id ==emp_id)).all()
         if len(employee_info) ==0 or compareTo(str(employee_info[0].password), password) != 0:
             flash("Invalid credentials!")
-            #return render_template("login_page.html")
             return redirect(url_for("login_page"))
         else:
             session["emp_id"] = emp_id
             session["logged_in"] = "logged_in"
             session ["authorisation"] = employee_info[0].position
             session.permanent =True
+            
             if session.get("authorisation") == "worker":
                 return redirect(url_for('mainMenu'))
             elif session.get("authorisation") == "manager":
                 return redirect(url_for('dashboard'))
-"""
-@app.route("/", methods = ['POST', 'GET'])
-def main():
-    return render_template("employee_side/main_page.html")
-"""
+
 
 # manager side pages
 @app.route("/dashboard",methods = ['POST', 'GET'])
@@ -92,6 +90,7 @@ def dashboard():
 
 
 @app.route("/orders",methods = ['POST', 'GET'])
+@manager_login
 def orders_page():
     if request.method == 'GET':
         with engine.connect() as connection:
@@ -120,6 +119,7 @@ def orders_page():
         return jsonify({'overlay':overlayData, 'table':order_items_list})
 
 @app.route("/inventory", methods = ['POST', 'GET'])
+@manager_login
 def inventory_page():
     if request.method =="GET":
         with engine.connect() as connection:
@@ -141,6 +141,7 @@ def inventory_page():
         return jsonify({"overlay":overlayData, "table":item_locList })
 
 @app.route("/inbound_shipments", methods = ['POST', 'GET'])
+@manager_login
 def inbound_shipment_page():
     if request.method =="GET":
         with engine.connect() as connection:
@@ -165,6 +166,7 @@ def inbound_shipment_page():
         return jsonify({'overlay':"", "table": []})
 
 @app.route("/receive_discrepancies", methods = ['POST', 'GET'])
+@manager_login
 def receive_discrepancy_page():
     if request.method == 'GET':
         with engine.connect() as connection:
@@ -186,6 +188,7 @@ def receive_discrepancy_page():
         return jsonify({"overlay":overlayData, "table":disc_item_list})
 
 @app.route("/deliveries", methods = ['POST', 'GET'])
+@manager_login
 def delivery_page():
     if request.method =="GET":
         with engine.connect() as connection:
@@ -221,6 +224,7 @@ def delivery_page():
             return jsonify({"overlay":overlayData,"table":del_ord_item_list})
 
 @app.route("/job_assignment", methods = ['POST', 'GET'])
+@manager_login
 def job_assigment_page():
     if request.method == "GET":
         return render_template("manager_side/job_assignment_page.html")
@@ -257,6 +261,7 @@ def job_assigment_page():
 
 
 @app.route("/employees", methods =["GET"])
+@manager_login
 def employee_page():
         with engine.connect() as connection:
             query = connection.execute(text('SELECT emp_id, name, email, phone_no FROM employee')).all()
@@ -264,6 +269,7 @@ def employee_page():
         return render_template("manager_side/employee_page.html", employeeData =strResults)
 
 @app.route("/pick_pack_assignment", methods = ["GET","POST"])
+@manager_login
 def pick_pack_assignment_page():
     if request.method =="GET":
         return render_template("manager_side/pick_pack_assignment_page.html")
@@ -342,29 +348,32 @@ def pick_pack_assignment_page():
 
 #employee side pages
 @app.route("/main_menu", methods = ["GET","POST"])
+@emp_login
 def mainMenu():
     return render_template("employee_side/main_page.html")
 
 @app.route("/instructions", methods = ["GET","POST"])
+@emp_login
 def instructions():
     if request.method == "GET":
         return render_template("employee_side/instructions_page.html")
 
     elif request.method =="POST":
-        tasks = db.session.execute(select(instruction.task, instruction.station).where(instruction.emp_id == session.get("emp_id"))).all()
+        tasks = db.session.execute(select(instruction.task, instruction.station, instruction.instructions).where(instruction.emp_id == session.get("emp_id"))).all()
         if len(tasks) ==0:
             return{"no_inst":stringify([])}
         else:
-            return ({"data":[stringify([tasks[0].task, tasks[0].station])]})
+            return ({"data":[stringify([tasks[0].task, tasks[0].station])], "inst":tasks[0].instructions})
 
 @app.route("/receive", methods = ["GET","POST"])
+@emp_login
 def receive():
     if request.method == "GET":
         return render_template("employee_side/receiving_page.html")
     elif request.method == "POST":
         if "ship_tdy" in request.form:    
             with engine.connect() as connection:
-                data = connection.execute(text("SELECT asn_id, arrival_time, vehicle_no, asn_status FROM asn  where DATE(arrival_date) = curdate()")).all()
+                data = connection.execute(text("SELECT asn_id, arrival_time, vehicle_no, asn_status FROM asn  where DATE(arrival_date) = curdate() and asn_status = 'pending'")).all()
             asn_list =[]
             for asn in data:
                 row = [str(asn.asn_id),str(asn.arrival_time), asn.vehicle_no, asn.asn_status]
@@ -413,35 +422,141 @@ def receive():
 
 
 @app.route("/putAway", methods = ["GET","POST"])
+@emp_login
 def putAway():
     if request.method == "GET":
         return render_template("employee_side/put_away_page.html")
     elif request.method == "POST":
         if "put_away_items" in request.form:
             with engine.connect() as connection:
-                query =connection.execute(text("select ri.item_id, i.item_name, ri.location from received_items ri, item i where ri.item_id = i.item_id;")).all()
+                query =connection.execute(text("select ri.item_id, i.item_name, ri.location from received_items ri, item i where ri.item_id = i.item_id and putaway = false;")).all()
             item_list =[]
             for item in query:
                 row =[item.item_id, item.item_name, item.location ]
                 item_list.append(row)
             return ({"data":item_list})
         elif "confirmPA" in request.form:
-            
+            item_id = request.form.get("item_id")
+            with engine.connect() as connection:
+                item = connection.execute(text("select item_id from item_location  where item_id = {}".format(item_id))).all()
+                item_info = connection.execute(text("select location, quantity from received_items where item_id ={}".format(item_id))).all()[0]
+                connection.execute("update received_items set putaway = 1 where item_id = {}".format(item_id))
+
+            if len(item_id) == 0:
+                db.session.add(item_location(location = item_info.location, item_id=item_id, quantity = item_info.quantity))
+                db.session.commit()
+            else:
+                with engine.connect() as connection:
+                    connection.execute(text("update item_location set quantity = quantity + {} where location = \'{}\'".format(item_info.quantity, item_info.location)))
+            return({"success":"success"})
         
 
 @app.route("/picking", methods = ["GET","POST"])
+@emp_login
 def picking():
-    return render_template("employee_side/picking_page.html")
+    if request.method == "GET":
+        return render_template("employee_side/picking_page.html")
+
+    elif request.method == "POST":
+        if "pick_orders" in request.form:
+            with engine.connect() as connection:
+                query = connection.execute(text("select oi.order_id, count(oi.item_id) as noOfItems from assigned_orders ao, order_item oi where ao.order_id = oi.order_id and emp_id ={} group by order_id".format(session["emp_id"]))).all()
+            order_list = []
+            x=1
+            for item in query:
+                row = [x, item.order_id,item.noOfItems]
+                order_list.append(row)
+                x+=1
+            return({"data": order_list})
+        elif "order_items" in request.form:
+            order_id = request.form["order_id"]
+            with engine.connect() as connection:
+                query = connection.execute(text("select i.item_id, i.item_name, o.quantity from item i, order_item o where i.item_id = o.item_id and o.order_id =  {}".format(order_id))).all()
+            item_list = []
+            x=1
+            for item in query:
+                row =[x, item.item_id, item.item_name,item.quantity]
+                x+=1
+                item_list.append(row)
+            return({"data":item_list})
+        elif "picklist" in request.form:
+            emp_id =session["emp_id"]
+            with engine.connect() as connection:
+                query = connection.execute(text("select pick_list from pick_list where emp_id = {}".format(session["emp_id"]))).all()
+            item_list =[]
+            x=1
+            if len(query) != 0:
+                pickListJson = json.loads(query[0].pick_list)
+                items = list(pickListJson.values())
+                
+                for item in items:                    
+                    with engine.connect() as connection:
+                        item_name = connection.execute(text("select item_name from item where item_id ={}".format(item.get("item_id")))).all()[0].item_name
+                    row = [x, item.get("item_id"), item_name, item.get("quantity"),item.get("location")]
+                    item_list.append(row)
+                    x+=1
+            return ({"data":item_list })
 
 @app.route("/packing", methods = ["GET","POST"])
+@emp_login
 def packing():
-    return render_template("employee_side/packing_page.html")
+    if request.method == "GET":
+        return render_template("employee_side/packing_page.html")
+    elif request.method =="POST":
+        if "pack_orders" in request.form:
+            with engine.connect() as connection:
+                packitem = connection.execute(text("select o.order_id, count(oi.item_id) as noOfItems, sum(i.weight) as weight from orders o, order_item oi, item i where o.order_id = oi.order_id and oi.item_id = i.item_id and o.order_status = 'picking' group by o.order_id;")).all()
+            item_list =[]
+            x=1
+            if len(packitem) != 0:
+                for item in packitem:
+                    row =[x, item.order_id, item.noOfItems,(str(item.weight) +"g")]
+                    item_list.append(row)
+                    x+=1
+            return({"data":item_list})
+        elif "order_items" in request.form:
+            order_id =request.form.get("order_id")
+            with engine.connect() as connection:
+                ordItem = connection.execute(text("select oi.item_id, oi.quantity, i.weight from order_item oi, item i where oi.item_id = i.item_id and oi.order_id = {}".format(order_id))).all()
+            row_list =[]
+            x=1
+            for item in ordItem:
+                row =[x, item.item_id, item.quantity, item.weight]
+                row_list.append(row)
+                x+=1
+            return({"data":row_list})
+        elif "completePack" in request.form:
+            order_id = request.form.get("order_id")
+            with engine.connect() as connection:
+                connection.execute(text("update orders set order_status ='packed' where order_id ={} ".format(order_id)))
+            return({"success":"s"})
+            
+
 
 @app.route("/inventoryCount", methods = ["GET","POST"])
+@emp_login
 def inventoryCount():
-    return render_template("employee_side/inventory_count_page.html")
+    if request.method == "GET":
+        return render_template("employee_side/inventory_count_page.html")
+    elif request.method == "POST":
+        if "chkInv" in request.form:
+            location = request.form.get("location")
+            with engine.connect() as connection:
+                query = connection.execute(text("select item_id, location, quantity from item_location where location =\"{}\"".format(location))).all()
+            if len(query) == 0:
+                return({"no item":"no item"})
+            else:
+                return({"success":"success","item_id":query[0].item_id, "location":query[0].location, "quantity":query[0].quantity})
+        elif "update_inv":
+            location = request.form.get("location")
+            quantity = request.form.get("quantity")
+            with engine.connect() as connection:
+                connection.execute(text("update item_location set quantity = {} where location = \"{}\"".format(quantity, location)))
+            return({"success":"success"})
+
 
 @app.route("/loading", methods = ["GET","POST"])
+@emp_login
 def loading():
     return render_template("employee_side/loading_page.html")
 
@@ -449,6 +564,7 @@ def loading():
 @app.route("/logout", methods = ["GET","POST"])
 def logout():
     session.clear()
+    flash("You have been logged out")
     return redirect(url_for('login_page'))
 
 
@@ -466,22 +582,26 @@ def compareTo(a,b):
     return ((a > b) - (a < b))
 
 def genRandLoc ():
-    aisle = ["01","02","03","04"]
-    rack = ['A','B','C','D']
-    bay =["1","2","3","4","5","6","7","8"]
-    level = ["L1","L2","L3"]
-    bin =["1","2","3"]
-    ordaisle = str(random.choice(aisle)) 
-    if ordaisle == "01":
-        orderrack = 'A'
-    else:
-        aisles= int(ordaisle) 
-        orderrack = str(random.choice(rack[aisles-2: aisles]))
-    ordbay = str(random.choice(bay))  
-    ordlevel = str(random.choice(level)) 
-    ordbin = str(random.choice(bin))
-    ordloc = ordaisle+ "-" + orderrack + "-"+ordbay +"-"+ordlevel +"-" +ordbin
-    return ordloc
+    while True:
+        aisle = ["01","02","03","04"]
+        rack = ['A','B','C','D']
+        bay =["1","2","3","4","5","6","7","8"]
+        level = ["L1","L2","L3"]
+        bin =["1","2","3"]
+        ordaisle = str(random.choice(aisle)) 
+        if ordaisle == "01":
+            orderrack = 'A'
+        else:
+            aisles= int(ordaisle) 
+            orderrack = str(random.choice(rack[aisles-2: aisles]))
+        ordbay = str(random.choice(bay))  
+        ordlevel = str(random.choice(level)) 
+        ordbin = str(random.choice(bin))
+        ordloc = ordaisle+ "-" + orderrack + "-"+ordbay +"-"+ordlevel +"-" +ordbin
+        with engine.connect() as connection:
+            chk = connection.execute(text("select location from item_location where location = {}".format(ordloc))).all()
+        if len(chk)==0:
+            return ordloc
 
 
 

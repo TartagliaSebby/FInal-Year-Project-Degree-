@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> </title> 
+    <title>Picking </title> 
     <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <!--libraries-->
     <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
     <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
     <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
     <script>
         //initialise data tables
-         $(document).ready( function () {
-            $('#pickordersTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,
+          $(document).ready( function () {
+            var pickOrdTab = $('#pickordersTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,select:'single',
+            "ajax":{
+                "url":"/picking",
+                "type":"post",
+                "data":{"pick_orders":"pick_orders"},
+                "dataType":"json"
+            },
             //make sure task table displays at least a min number of rows
             drawCallback: function(){
                     var api =  $('#pickordersTable').DataTable();
@@ -20,25 +29,74 @@
                     }
                 }
             });
-            $('#orderItemsTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,
-            //make sure task table displays at least a min number of rows
-            drawCallback: function(){
-                    var api =  $('#orderItemsTable').DataTable();
-                    var rows = api.rows({page: 'current'}).count();
-                    for(var i=0; i<api.page.len() - rows; i++){
-                        $('#orderItemsTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+            var ordItmTab = $('#orderItemsTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":6,
+                //make sure task table displays at least a min number of rows
+                drawCallback: function(){
+                        var api =  $('#orderItemsTable').DataTable();
+                        var rows = api.rows({page: 'current'}).count();
+                        for(var i=0; i<api.page.len() - rows; i++){
+                            $('#orderItemsTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                        }
                     }
+                });
+            var pickLiTab =$("#pickListTable").DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":6,
+                drawCallback: function(){
+                            var api =  $('#pickListTable').DataTable();
+                            var rows = api.rows({page: 'current'}).count();
+                            for(var i=0; i<api.page.len() - rows; i++){
+                                $('#pickListTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>"));
+                            }
+                        }
+                    });
+            //event listeners
+            pickOrdTab.on('select',function(e, dt, type, indexes ){
+                if (type == "row"){
+                    order_id = pickOrdTab.rows(indexes).data().pluck('1')[0];
+                    openOrdItemsOl(order_id)
+                }
+            })
+        })
+
+
+        function openOrdItemsOl(order_id){
+            ordItmTab = $('#orderItemsTable').DataTable();
+            ordItmTab.clear().draw();
+            document.getElementById("overlayOrdItems").style.width="100%";
+            document.getElementById("headerOrdItm").style.width="100%";
+            $.ajax({
+                url:"/picking",
+                data:{"order_items":"order_items","order_id":order_id},
+                type:"post",
+                dataType:"json",
+                success: function(data){
+                    document.getElementById("orderNumber").textContent = order_id
+                    ordItmTab.rows.add(data["data"]).draw()
                 }
             });
-         });
-        //overlay scripts
-        function openOrdItemsOl(){
-            document.getElementById("overlayOrdItems").style.width="100%";
         }
         function closeOrdItemsOl() {
             document.getElementById("overlayOrdItems").style.width="0";
+            document.getElementById("headerOrdItm").style.width="0";
         }
-
+        function openPickListOl(){
+            pickLiTab = $('#pickListTable').DataTable();
+            pickLiTab.clear().draw()
+            $.ajax({
+                url:"/picking",
+                data:{"picklist":"picklist"},
+                type:"post",
+                dataType:"json",
+                success: function(data){
+                    pickLiTab.rows.add(data["data"]).draw()
+                }
+            })
+            document.getElementById("overlayPickList").style.width ="100%";
+            document.getElementById("headerPick").style.width ="100%";
+        }
+        function closePickListOl(){
+            document.getElementById("overlayPickList").style.width ="0%";
+            document.getElementById("headerPick").style.width ="0%";
+        }
     </script>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -49,43 +107,47 @@
 </head>
 
 <body> 
-    <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
-        <p class="topBarText" style="margin-left:3vw" >Picking</p>
-        <div class="backButton topBarText">
-            <img src="../../static/imgs/back_icon(white).png" height="40px">
-            <p> Back</p>
-            <a href="/main_menu"></a>
+    <header class = "navbar navbar-dark fixed-top " style="background-color:rgb(29, 42, 49); z-index: 10;">
+        <div class="container-fluid">
+          <a href=""class="navbar-brand" style="color: white;"> <strong>Picking</strong> </a>
+            <a href="/main_menu" class="topBarText btn btn-light btn-lg">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                Back
+            </a>
         </div>
-    </div>  
+    </header>
+
     <div class="contentContainer" >
-        <p class="contentLabelText">Order List</p>
+        <p class="contentLabelText" style="margin-top: 3%; margin-left: 2%;">Order List</p>
         <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
             <table id="pickordersTable" class="display table" >
                 <thead>
                     <th>No</th>
                     <th>Order id</th>
-                    <th>items</th>
+                    <th>no of Items</th>
                 </thead>
                 <tbody>
                 </tbody>
             </table>
         </div>
-        <p class="button" style="width:30vw;"><span style="margin-left: auto; margin-right:auto;">View Picking List</span></p>
+        <div class="d-flex justify-content-start" style="width: 95%;margin-left:auto; margin-right:auto;">
+            <button class="btn btn-secondary" style="background-color:rgb(29, 42, 49);" onclick="openPickListOl()">View Picking List</button>
+        </div>
         
        
     </div>
 
     <!--Overlay for Order Items -->
-    <div id="overlayOrdItems" class="overlayContainer" >
-        <div class="topBarText  overlayTopBar ">
-            <span style="margin-left: 3vw;">Order Items</span>
-            <div class="backButton" onclick="closeOrdItemsOl()">
-                <img src="../../static/imgs/back_icon.png" >
-                <span> Back </span>
+    <div id="overlayOrdItems" class="overlayContainer" style="z-index:  11;">
+        <header class = "navbar navbar-light fixed-top overlayFixed" id="headerOrdItm" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);background-color: white;">
+            <div class="container-fluid">
+              <span href=""class="navbar-brand" > <strong>Order Items</strong> </span>
+                <button class="btn btn-close" onclick="closeOrdItemsOl()"></button>
             </div>
-        </div>
-        <div class="overlayContentContainer" >
-            <p class="contentLabelText">Order number: <span id="orderNumber"></span></p>
+        </header>
+
+        <div class="overlayContentContainer" style="position:relative;top:5rem">
+            <p class="contentLabelText">Order id: <span id="orderNumber"></span></p>
             <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
                 <table id="orderItemsTable" class="display table" >
                     <thead>
@@ -100,23 +162,24 @@
             </div>
         </div>
     <!--Overlay for Picking List -->
-    <div id="overlayASN" class="overlayContainer" style="width:0" >
-        <div class="topBarText  overlayTopBar ">
-            <span style="margin-left: 3vw;">Pick List</span>
-            <div class="backButton" onclick="closeOrdItemsOl()">
-                <img src="../../imgs/back_icon.png" >
-                <span> Back </span>
+    <div id="overlayPickList" class="overlayContainer" style="z-index: 12;" >
+        <header class = "navbar navbar-light fixed-top overlayFixed" id="headerPick" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);background-color: white;">
+            <div class="container-fluid">
+              <span href=""class="navbar-brand" > <strong>Pick List</strong> </span>
+                <button class="btn btn-close" onclick="closePickListOl()"></button>
             </div>
-        </div>
-        <div class="overlayContentContainer" >
-            <p class="contentLabelText">Order number: <span id="orderNumber"></span></p>
-            <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
+        </header>
+
+        <div class="overlayContentContainer" style="position:relative;top:5rem" >
+            <p class="contentLabelText">Pick List</p>
+            <div style="width: 95%; margin-left: auto; margin-right: auto;"><!--table container-->
                 <table id="pickListTable" class="display table" >
                     <thead>
                         <th>No</th>
                         <th>Item id</th>
                         <th>Name</th>
                         <th>Quantity</th>
+                        <th>location</th>
                     </thead>
                     <tbody>
                     </tbody>

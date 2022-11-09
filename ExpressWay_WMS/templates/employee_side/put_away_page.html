@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> </title> 
+    <title>Put Away </title>
     <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <!--libraries-->
     <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
     <script>
-        
+
         //initialise data tables
          $(document).ready( function () {
            recItmTab =  $('#receivedItemsTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8, select:'single',
@@ -25,20 +25,12 @@
                     }
                 }
             });
-            $.ajax({
-                url: '/putAway',
-                type: "POST",
-                data: {"put_away_items":"pa"},
-                dataType: "json",
-                success:function(data){
-                    recItmTab.rows.add(data["data"]).draw()
-                }
-            });
+            loadTabData();
             //global variables
             var selItem = ""
             var loc = ""
             //event listeners
-             recItmTab.on('select',function(e, dt, type, indexes ){
+            recItmTab.on('select',function(e, dt, type, indexes ){
                 if (type == "row"){
                     selItem = recItmTab.rows(indexes).data().pluck('0')[0];
                     loc = recItmTab.rows(indexes).data().pluck('2')[0];
@@ -46,26 +38,44 @@
                 }
             })
          });
-        
-        //overlay scripts
+
+        function loadTabData(){
+            $.ajax({
+                url: '/putAway',
+                type: "POST",
+                data: {"put_away_items":"pa"},
+                dataType: "json",
+                success:function(data){
+                    recItmTab.clear().draw()
+                    recItmTab.rows.add(data["data"]).draw()
+                }
+            });
+        }
         function openPutAwayOl(item_id,location){
             $("#confirmation").appendTo("body").modal('show');
             document.getElementById("item_id").textContent = item_id;
             document.getElementById("binlocation").textContent = location;
         }
-        function closePutAwayOl() {            
+        function closePutAwayOl() {
             $("#confirmation").modal('hide');
         }
-        //
         function confirmPutAway(){
+            item_id = document.getElementById("item_id").textContent;
             $.ajax({
-                url:"putAway",
-                data:{},
+                url:"/putAway",
+                type:"post",
+                data:{"confirmPA":"pa","item_id":item_id},
+                dataType:"json",
+                success: function(data){
+                    if("success" in data){
+                        closePutAwayOl();
+                        loadTabData();
+                        alert("Putaway successful");
+                    }
+                }
             });
         }
     </script>
-
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="../../static/css/employee_common.css">
     <style>
         a{
@@ -86,24 +96,24 @@
             position:relative;
         }
         .note{
-            width:100%; 
-            height:15vh; 
-            border:lightgray solid 0.5px; 
+            width:100%;
+            height:15vh;
+            border:lightgray solid 0.5px;
             border-radius:5px;
         }
         .inputContainer{
-            display:flex; 
-            flex-direction:column; 
-            width: 80%; 
-            margin-left: auto; 
+            display:flex;
+            flex-direction:column;
+            width: 80%;
+            margin-left: auto;
             margin-right: auto;
             margin-top: 5px;
             border: black 0.5px solid;
             padding:1vw;
         }
         .inputRow{
-            display: flex; 
-            align-items: center; 
+            display: flex;
+            align-items: center;
             justify-content: space-between;
             width :100%;
             margin-top: 1vh;
@@ -111,20 +121,29 @@
         }
         .inputRowText{
             font-size: 3vw;
-            font-weight: 700; 
+            font-weight: 700;
             width:23%
         }
         .inputTextArea{
-            resize:none; 
-            border: black 0.5px solid; 
-            background-color: aliceblue; 
+            resize:none;
+            border: black 0.5px solid;
+            background-color: aliceblue;
             width:40vw
         }
 
     </style>
 </head>
 
-<body> 
+<body>
+    <header class = "navbar navbar-dark fixed-top " style="background-color:rgb(29, 42, 49); z-index: 10;">
+        <div class="container-fluid">
+          <a href=""class="navbar-brand" style="color: white;"> <strong>Put Away</strong> </a>
+            <a href="/main_menu" class="topBarText btn btn-light btn-lg">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                Back
+            </a>
+        </div>
+    </header>
     <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
         <p class="topBarText" style="margin-left:3vw" >Put Away </p>
         <div class="backButton topBarText">
@@ -132,9 +151,9 @@
             <p> Back</p>
             <a href="/main_menu"></a>
         </div>
-    </div>  
+    </div>
     <div class="contentContainer" >
-        <p class="contentLabelText">Items to Put Away</p>
+        <p class="contentLabelText" style="margin-top: 3%; margin-left: 2%;">Items to Put Away</p>
         <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
             <table id="receivedItemsTable" class="display table" >
                 <thead>
@@ -146,20 +165,11 @@
                 </tbody>
             </table>
         </div>
-        
-       
+
+
     </div>
 
     <!--Overlay for put away -->
-    <div id="overlayPutAway" class="overlayContainer">
-        <div class="topBarText  overlayTopBar ">
-            <span style="margin-left: 3vw;">Put Away</span>
-            <div class="backButton" onclick="closePutAwayOl()">
-                <img src="../../static/imgs/back_icon.png" >
-                <span> Back </span>
-            </div>
-        </div>
-
         <div class="modal fade bd-example-modal-lg" id="confirmation" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
               <div class="modal-content">
@@ -170,7 +180,7 @@
                 </div>
                 <div cass = "modal-body">
                     <div class="container">
-                        
+
                         <div class="row mb-2">
                             <div class="col h2 ">Item id</div>
                             <div class="col h2"> <span id = "item_id"></span></div>

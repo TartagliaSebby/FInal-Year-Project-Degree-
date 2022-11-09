@@ -1,16 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> </title> 
+    <title>Packing </title> 
     <meta Charset ="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <!--libraries-->
     <script src="https://code.jquery.com/jquery-3.5.1.js"> </script>
     <link rel="stylesheet" type="text/css" href="../../static/external_libraries/DataTables/datatables.css">
     <script type="text/javascript" charset="utf8" src="../../static/external_libraries/DataTables/datatables.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    
+    
     <script>
         //initialise data tables
          $(document).ready( function () {
-            $('#orderListTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8,
+            var ordTab = $('#orderListTable').DataTable({"searching":false,  "info":false,"lengthChange":false, "pageLength":8, select:'single',
+            "ajax":{
+                "url":"/packing",
+                "data": {"pack_orders":"pack"},
+                "type":"post",
+                "dataType":'json'
+            },
             //make sure task table displays at least a min number of rows
             drawCallback: function(){
                     var api =  $('#orderListTable').DataTable();
@@ -30,13 +41,57 @@
                     }
                 }
             });
+            //event lsiteners
+            ordTab.on("select", function( e, dt, type, indexes ){
+                if (type == "row"){
+                    var order_id = ordTab.rows(indexes).data().pluck('1')[0];
+                    document.getElementById("orderId").textContent = order_id;
+                    openOrdItemOl(order_id);
+                }})
          });
         //overlay scripts
-        function openOrdItemOl(){
+        function openOrdItemOl(order_id){
+            
+            tab = $('#orderItemsTable').DataTable();
+            $.ajax({
+                url:"/packing",
+                data:{"order_items":"ord","order_id":order_id },
+                type:"post",
+                dataType:"json",
+                success: function(data){
+                    tab.rows.add(data["data"]).draw();
+                }
+            });
             document.getElementById("overlayDelOrders").style.width="100%";
+            document.getElementById("headerPackItm").style.width="100%";
         }
         function closeOrdItemOl() {
+            tab = $('#orderItemsTable').DataTable();
+            tab.clear().draw()
             document.getElementById("overlayDelOrders").style.width="0";
+            document.getElementById("headerPackItm").style.width="0";
+        }
+        function completePacking(){
+            order_id = document.getElementById("orderId").textContent;
+            $.ajax({
+                url:"/packing",
+                data:{"completePack":"complete", "order_id":order_id},
+                type:"post",
+                dataType:"json",
+                success:function(data){
+                    if ("success" in  data){
+                        closeModal();
+                        closeOrdItemOl();
+                    }
+                }
+            });
+            alert("Completed Packing!")
+        }
+        function showModal(){
+            $('#confirmation').modal('show')
+        }
+        function closeModal(){
+            $('#confirmation').modal('hide')
         }
 
 
@@ -53,23 +108,24 @@
 </head>
 
 <body> 
-    <div class="topBar pageTopBarCol" style="margin-bottom:2vh">
-        <p class="topBarText" style="margin-left:3vw" >Packing </p>
-        <div class="backButton topBarText">
-            <img src="../../static/imgs/back_icon(white).png" height="40px">
-            <p> Back</p>
-            <a href="/main_menu"></a>
+    <header class = "navbar navbar-dark fixed-top " style="background-color:rgb(29, 42, 49); z-index: 10;">
+        <div class="container-fluid">
+          <a href=""class="navbar-brand" style="color: white;"> <strong>Packing</strong> </a>
+            <a href="/main_menu" class="topBarText btn btn-light btn-lg">
+                <i class="bi bi-arrow-left-circle-fill"></i>
+                Back
+            </a>
         </div>
-    </div>  
+    </header>
     <div class="contentContainer" >
-        <p class="contentLabelText">Order List </p>
+        <p class="contentLabelText" style="margin-top: 3%; margin-left: 2%;">Order List </p>
         <div style="width: 90%; margin-left: auto; margin-right: auto;"><!--table container-->
             <table id="orderListTable" class="display table" >
                 <thead>
                     <th>No</th>
                     <th>Order id</th>
                     <th>items</th>
-                    <th>Total Weight</th>
+                    <th>Total Weight (g)</th>
                 </thead>
                 <tbody>
                 </tbody>
@@ -80,16 +136,15 @@
     </div>
 
     <!--Overlay for Order items-->
-    <div id="overlayDelOrders" class="overlayContainer" >
-        <div class="topBarText  overlayTopBar ">
-            <span style="margin-left: 3vw;">Order Items</span>
-            <div class="backButton" onclick="closeOrdItemOl()">
-                <img src="../../static/imgs/back_icon.png" >
-                <span> Back </span>
+    <div id="overlayDelOrders" class="overlayContainer" style="z-index: 11;">
+        <header class = "navbar navbar-light fixed-top overlayFixed" id="headerPackItm" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);background-color: white;">
+            <div class="container-fluid">
+              <span href=""class="navbar-brand" > <strong>Order Items</strong> </span>
+                <button class="btn btn-close" onclick="closeOrdItemOl()"></button>
             </div>
-        </div>
+        </header>
         <div class="overlayContentContainer" >
-            <p class="contentLabelText">Order id: <span id="orderId"></span></p>
+            <p class="contentLabelText" >Order id: <span id="orderId"></span></p>
             <table id="orderItemsTable" class="display table" >
                 <thead>
                     <th>No</th>
@@ -100,12 +155,23 @@
                 <tbody>
                 </tbody>
             </table>
-           
-            
+                <button class="btn btn-success mt-3" onclick="showModal()">Finish Packing</button>
         </div>
-
     </div>
-    
+
+    <!--modal-->
+    <div class="modal fade bd-example-modal-lg" id="confirmation" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div cass = "modal-body">
+                <p class="h2 m-3"> Confirm complete packing? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-seconadry" onclick="closeModal()"> Cancel</button>
+                <button class="btn btn-primary" onclick="completePacking()"> Confirm</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

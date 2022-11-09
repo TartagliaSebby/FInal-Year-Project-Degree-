@@ -1,6 +1,6 @@
 {% extends "manager_side/baseManager.html" %}
 
-{% block title %}Job Assignment{% endblock %}
+{% block title %}Task Assignment{% endblock %}
 
 {% block script %}
 <script>
@@ -11,8 +11,8 @@ $(document).ready( function () {
     columns:[
       {title:"Employee id"},
       {title:"Name"},
-      {title:"Assigned Job"},
-      {title:"Station"}
+      {title:"Assigned Task"},
+      {title:"Station"},
     ],
     "ajax":{
       "data": {"jobTab":"jobTab"} ,
@@ -36,17 +36,17 @@ setInterval( function(){
   $('#jobTable').DataTable().ajax.reload(null, false);
 }, 5000);
 
-var emp_assignment_modal =  new bootstrap.Modal(document.getElementById("#modal"),{});
+//var emp_assignment_modal =  new bootstrap.Modal(document.getElementById("#modal"),{});
 
 
 function openOL(emp_name, emp_id){
-  emp_assignment_modal.show();
+  $('#modal').modal('show')
   document.getElementById("emp_name").textContent=emp_name;
   $("#emp_name").data('empid',emp_id);
 }
 function closeOL(){
   //update display in webpage
-  emp_assignment_modal.hide()
+  $('#modal').modal('hide')
 }
 //sends update instrction to server
 function sendUpdateInst(){
@@ -164,82 +164,68 @@ function changeOptions(){
 {{json}}
 <div style="display:flex; flex-direction: column;">
   <div class="contentTopBar">
-      <p class="contentTopBarText">Job Assignment</p>
+      <p class="contentTopBarText">Task Assignment</p>
   </div>
 
   <!--table-->
-  <table id="jobTable" class="display"></table>
-  <button style="align-self: flex-end; margin-top:20px; width:110px; height: 30px;" ><a href="/pick_pack_assignment">Assign Jobs</a></button>
+  <table id="jobTable" class="display table" style="margin-top:20px"></table>
+  <div class="d-flex justify-content-end">
+    <a href="/pick_pack_assignment" class="btn btn-primary btn-lg mt-3">Assign Tasks</a>
+  </div>
 </div>
 {% endblock%}
 
 {% block externalContent %}
 <!--overlay for assigning jobs and stations-->
-<div class="overlayContainer" id="overlay">
-  <div style ="display: flex; align-content:center; margin:10px">
-    <table>
-      <thead>
-        <th style="width:180px;">Employee</th>
-        <th>Task</th>
-        <th>Station</th>
-      </thead>
-      <tbody>
-        <tr>
-          <td id="emp_name" style="text-align:center" data-empid =""></td>
-          <td>
-            <select onchange="changeOptions()" style = "width:100px; height:30px ; justify-self:flex-start" id="task">
-              <option value ="default"></option>
-              <option value = "picking">Picking</option>
-              <option value = "packing">Packing</option>
-              <option value = "receiving">Receiving</option>
-              <option value = "loading">Loading</option>
-            </select>
-          </td>
-          <td>
-            <select id="station" style = "width:100px; height:30px; justify-self:flex-end;" id="station" >
-            </select>
-          </td>
-          <tr style="height:10px"></tr>
-        </tr>
-        <tr>
-          <td colspan ="3">Instructions to worker</td>
-        </tr>
-        <tr>
-          <td colspan = "3">
-            <textarea name="instructions" id="instField" cols="50" rows="4"></textarea>
-          </td>
-
-        </tr>
-        <tr>
-          <td>
-            <button class="remove_button" onclick="closeOL();sendDeleteInst()">Remove Task</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
 <!--modal-->
-<div class ="modal fade" id ="modal" tabindex="-1" aria-labelledby="modal_label">
-  <div class ="modal-dialog modal-dialog-centered">
+<div class="modal fade bd-example-modal-lg" id="modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
-      <div class="modal-title fs-5" id="modal_label">
-        <h1>Assign task to employee</h1> 
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="cancel"></button>
+      <div class="modal-header">
+          <h5 class="modal-title" id="modalLabel"><strong>Assign Task</strong> </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+          </button>
       </div>
-      <div class ="modal-body">
-        <p>helloe</p>
+      <div cass = "modal-body">
+          <div class="container">
+            <div class="row mb-2">
+              <div class="col-4"><strong>Employee</strong> </div>
+              <div class="col-3"> <strong>Task</strong> </div>
+              <div class="col-3"><strong>Station</strong> </div>
+            </div>
+            <div class="row">
+              <div class="col-4" ><span id="emp_name" style="text-align:center" data-empid =""></span></div>
+              <div class="col-3">
+                <select onchange="changeOptions()" style = "width:100px; height:30px ; justify-self:flex-start" id="task">
+                  <option value ="default"></option>
+                  <option value = "picking">Picking</option>
+                  <option value = "packing">Packing</option>
+                  <option value = "receiving">Receiving</option>
+                  <option value = "loading">Loading</option>
+                </select>
+              </div>
+              <div class="col-3">
+                <select id="station" style = "width:100px; height:30px; justify-self:flex-end;" id="station"></select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col h5"><strong>Instructions to worker</strong> </div>
+            </div>
+            <div class="row">
+              <div class="col"><textarea name="instructions" id="instField" cols="50" rows="4"></textarea></div>
+            </div>
+            <div class="row">
+              <div class="d-flex justify-content-end"><button class="btn btn-danger mb-3" onclick="closeOL();sendDeleteInst()">Remove Task</button></div>
+            </div>
+          </div>
       </div>
-      <div class ="modal-footer">
-        <button type="button" class ="btm btn-secondary"data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Confirm</button>
+      <div class="modal-footer">
+          <button class="btn btn-seconadry" onclick="closeOL()"> Cancel</button>
+          <button class="btn btn-primary" onclick=" closeOL();sendUpdateInst()"> Confirm</button>
       </div>
-    </div>
-
   </div>
-
 </div>
-<!--close the overlay by clicking outside the overlay-->
-<div onclick="closeOL();sendUpdateInst()" id="backButton" ></div>
+
+
 
 {% endblock %}

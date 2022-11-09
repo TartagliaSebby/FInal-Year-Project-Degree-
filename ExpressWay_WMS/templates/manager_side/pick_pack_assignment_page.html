@@ -31,6 +31,7 @@ $(document).ready( function () {
         $('#selectEmpTable').DataTable({
           select: "multi",
           "bAutoWidth": false,
+          "lengthChange": false,
           columns:[
             {title:"Employee id"},
             {title:"Name"},
@@ -198,19 +199,19 @@ $(document).ready( function () {
 <div style="position:relative;">
             <!--Overlay for pending Orders-->
             <div id="overlayPendingOrd" class="tableOverlayContainer" style="position:absolute; width:100%;">
-            <p style="margin-left:20px; font-size: 1.25em; font-weight: 500px;">Pending Orders</p>
-            <table id="pendingOrderTable" class="display"></table>
+            <p style="margin-left:20px; font-size: 1.25em; font-weight: 500px;"><strong>Pending Orders</strong></p>
+            <table id="pendingOrderTable" class="display table"></table>
             <div>
-              <button class="stepButton nextButton" onclick="nextStep()">Next Step</button>
+              <button class="btn btn-success btn-lg" onclick="nextStep()"><strong>Next Step</strong></button>
             </div>
             </div>
             <!--Overlay for employee selection-->
             <div id="overlaySelectEmp" class="tableOverlayContainer" style="position:absolute;">
-              <p style="font-weight:600;font-size: 1.25em; font-weight: 500px; ">Available Employees </p>
-              <table id="selectEmpTable" class="display"></table>
+              <p style="font-weight:600;font-size: 1.25em; font-weight: 500px; "> Available Employees </p>
+              <table id="selectEmpTable" class="display table"></table>
               <div>
-                <button class="stepButton prevButton" onclick="prevStep()">Prev Step</button>
-                <button class="stepButton nextButton" onclick="finish()">Finish</button>
+                <button class="btn btn-warning btn-lg" style="color:white" onclick="prevStep()"><strong>Prev Step</strong> </button>
+                <button class="btn btn-success btn-lg" onclick="finish()"><strong>Finish</strong> </button>
               </div>
             </div>
 </div>
