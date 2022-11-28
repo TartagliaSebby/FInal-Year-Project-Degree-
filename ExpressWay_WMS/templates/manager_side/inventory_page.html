@@ -13,7 +13,17 @@
           {title:"Name"},
           {title:"Seller id"},
           {title:"Quantity"}
-        ]
+        ],
+        "lengthChange":false,
+        "pageLength":8,
+        //make sure task table displays at least a min number of rows
+        drawCallback: function(){
+                    var api =  $('#inventoryTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i<api.page.len() - rows; i++){
+                        $('#inventoryTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                    }
+                }      
      });
   $('#locationTable').DataTable({
     "searching":false,

@@ -19,7 +19,17 @@ $(document).ready( function () {
       "url": "/job_assignment",
       "type":"Post",
       "datasrc": ""
-    }
+    },
+    "lengthChange":false,
+    "pageLength":7,
+    //make sure task table displays at least a min number of rows
+    drawCallback: function(){
+                var api =  $('#jobTable').DataTable();
+                var rows = api.rows({page: 'current'}).count();
+                for(var i=0; i<api.page.len() - rows; i++){
+                    $('#jobTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                }
+            }   
   });
   //event listeners
   jobTab.on("select", function( e, dt, type, indexes ){

@@ -20,9 +20,17 @@
 
 
         {% block script %} {% endblock %}
-
+        
 
         {% block style %}{% endblock %}
+  <script>
+    function showModal(){
+      $('#confirmation').modal('show')
+    }
+    function closeModal(){
+      $('#confirmation').modal('hide')
+    }
+  </script>
   <style>
     .nav > li > a:hover{
       background-color:rgb(0, 8, 255);
@@ -33,7 +41,7 @@
     <header class = "navbar navbar-light fixed-top " style="background-color:white; border-bottom: black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77); z-index:10;">
       <div class="container-fluid">
         <a href="/dashboard" class="navbar-brand"> <strong>ExpressWay</strong> </a>
-        <a href="/logout" class="topBarText btn btn-dark btn-border-radius-sm btn-sm"> Log Out</a>
+        <button  class="topBarText btn btn-dark btn-border-radius-sm btn-sm" onclick="showModal()"> Log Out</button>
       </div>
     </header>
     <div style ="height:10px;">
@@ -82,7 +90,19 @@
         </div>
         {% block externalContent %} {% endblock %}
     </div>
-
+    <!--modal-->
+    <div class="modal fade bd-example-modal-lg" id="confirmation" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div cass = "modal-body">
+              <p class="h2 m-3"> Confirm Log Out? </p>
+          </div>
+          <div class="modal-footer">
+              <button class="btn btn-seconadry" onclick="closeModal()"> Cancel</button>
+              <a href="/logout" class="btn btn-primary" > Confirm</a>
+          </div>
+      </div>
+    </div>
 
 </body>
 </html>

@@ -16,7 +16,17 @@ $(document).ready( function () {
       {title:"Shipment Type"},
       {title:"Date"},
       {title:"Time"}
-    ]
+    ],
+    "lengthChange":false,
+    "pageLength":8,
+    //make sure task table displays at least a min number of rows
+    drawCallback: function(){
+                var api =  $('#discrepancyTable').DataTable();
+                var rows = api.rows({page: 'current'}).count();
+                for(var i=0; i<api.page.len() - rows; i++){
+                    $('#discrepancyTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>"));
+                }
+            }   
   });
   $('#discrepancyReportTable').DataTable({"searching":false,
         "lengthChange": false,

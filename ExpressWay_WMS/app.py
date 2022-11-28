@@ -403,14 +403,23 @@ def receive():
                 #query for items that are already in the warehouse and items that are not
                 nonDupItems =  connection.execute(text("select item_id, quantity from asn_items WHERE item_id Not IN ( select ai.item_id from asn_items ai, item_location il where ai.item_id = il.item_id AND asn_id = {})AND asn_id = {}".format(asn_id, asn_id))).all()
                 dupItems = connection.execute(text("select distinct ai.item_id, ai.quantity from asn_items ai, item_location il WHERE ai.item_id = il.item_id AND ai.asn_id = {}".format(asn_id))).all()
-                #connection.execute(text("SELECT item_id  FROM item_location WHERE item_id IN (SELECT item_id from asn_items WHERE asn_id ={}) AND".format(asn_id))).all()
             for item in dupItems:
                 with engine.connect() as connection:
+                    disc = connection.execute(text("select received from receive_discrepancies where item_id ={} and asn_id ={}".format(item.item_id, asn_id))).all()
+                    if len(disc) == 0:
+                        item_quantity = item.quantity
+                    else:
+                        item_quantity = disc[0].received
                     loc = connection.execute(text("select location, quantity from item_location where item_id = {} order by quantity".format(item.item_id))).all()[0]
-                    connection.execute(text("insert into received_items values({},0, {}, \'{}\')".format(item.item_id, item.quantity, loc.location)))
+                    connection.execute(text("insert into received_items values({},0, {}, \'{}\')".format(item.item_id, item_quantity, loc.location)))
             for item in nonDupItems:
                 with engine.connect() as connection:
-                    connection.execute(text("insert into received_items values({},0, {}, \'{}\'))".format(item.item_id,  item.quantity,genRandLoc())))
+                    disc = connection.execute(text("select received from receive_discrepancies where item_id ={} and asn_id ={}".format(item.item_id, asn_id))).all()
+                    if len(disc) == 0:
+                        item_quantity = item.quantity
+                    else:
+                        item_quantity = disc[0].received
+                    connection.execute(text("insert into received_items values({},0, {}, \'{}\'))".format(item.item_id,  item_quantity,genRandLoc())))
             with engine.connect() as connection:
                connection.execute(text("update asn set asn_status = 'received' where asn_id = {}".format(asn_id)))
             return ({"success":"success"})
@@ -480,7 +489,6 @@ def picking():
                 item_list.append(row)
             return({"data":item_list})
         elif "picklist" in request.form:
-            emp_id =session["emp_id"]
             with engine.connect() as connection:
                 query = connection.execute(text("select pick_list from pick_list where emp_id = {}".format(session["emp_id"]))).all()
             item_list =[]
@@ -496,6 +504,18 @@ def picking():
                     item_list.append(row)
                     x+=1
             return ({"data":item_list })
+        elif "complete_pick" in request.form:
+            with engine.connect() as connection:
+                query = connection.execute(text("select pick_list from pick_list where emp_id = {}".format(session["emp_id"]))).all()
+            if len(query) != 0:
+                pickListJson = json.loads(query[0].pick_list)
+                items = list(pickListJson.values())
+            for item in items:
+                with engine.connect() as connection:
+                    query = connection.execute(text("update item_location set quantity = quantity - {} where location = \"{}\" ".format(item.get("quantity"), item.get("location"))))     
+                    #free up empty locations in database
+                    connection.execute(text("delete from item_location where quantity<1"))
+            return ({"success":"success"})
 
 @app.route("/packing", methods = ["GET","POST"])
 @emp_login

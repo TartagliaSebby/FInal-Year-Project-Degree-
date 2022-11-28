@@ -199,7 +199,6 @@ def fitness_func(solution, solution_idx):
     tempOrdList = []
     for i in range (0, len(solution)):
         tempOrdList.append(orderList[solution[i]])
-    random.shuffle(tempOrdList)
     splitedOrd = splitOrders(tempOrdList, numOfEmp)
 
     #calculate distance for each pickList and sum up distance
@@ -213,8 +212,8 @@ def fitness_func(solution, solution_idx):
     return fitness
 
 #variables to tweak to optimise Genetic Algo
-num_generations = 100
-num_parents_mating = 10
+num_generations = 150
+num_parents_mating = 20
 sol_per_pop = 60
 num_genes = len(orderList)
 ga_instance = pygad.GA(num_generations=num_generations,
@@ -224,18 +223,18 @@ ga_instance = pygad.GA(num_generations=num_generations,
                     num_genes=num_genes,
                     gene_type=int,
                     allow_duplicate_genes=False,
-                    crossover_type="uniform",
-                    crossover_probability= 0.1,
-                    mutation_type="adaptive",
-                    mutation_probability=[0.4,0.01],
-                    #mutation_num_genes = [int(num_genes/4),2],
-                    parent_selection_type="sss",
+                    crossover_type="single_point",
+                    crossover_probability= 0.5,
+                    mutation_type="random",
+                    mutation_by_replacement=True,
+                    mutation_probability=0.1,
+                    parent_selection_type="sus",
                     gene_space={'low':0,'high':len(orderList)},
                     keep_elitism=int(sol_per_pop/4),
-                    #stop_criteria=["saturate_20"],
                     suppress_warnings=True,
                     save_best_solutions=True
                     )
+
 ga_instance.run()
 #clear old pickList and store new pick_list
 with engine.connect() as conn:
@@ -245,7 +244,6 @@ splitedAssigned = splitOrders(orderList, numOfEmp)
 x=0
 y=0
 for pickList in splitedAssigned:
-
     itemsinList =[]
     for order in pickList:
         Session.add(assigned_orders(order_id = order.orderId, emp_id = employeeList[x]))

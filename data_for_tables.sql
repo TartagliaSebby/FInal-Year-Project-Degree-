@@ -103,6 +103,7 @@ insert into asn_items values(458123,128420,20);
 insert into asn_items values(499921,102352,5);
 insert into asn_items values(444212,183913,3);
 insert into asn_items values(450512,104921,3);
+insert into asn_items values(450512,112321,3);
 insert into asn_items values(491732,104921,3);
 
 #item_location table 
@@ -177,3 +178,5 @@ select distinct e.item_id, SUM(e.quantity) from item_location e right outer join
 INSERT INTO pick_list VALUES(8008,"{'0': "{'item_id': 107832, 'location': '01-A-5-L3-2', 'quantity': 2}"}")
 
 insert into received_items values(102352,0, 1,"01-A-5-L1-2");
+
+

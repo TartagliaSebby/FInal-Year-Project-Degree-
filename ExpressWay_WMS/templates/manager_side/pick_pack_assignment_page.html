@@ -20,10 +20,12 @@ $(document).ready( function () {
               "type":"Post",
               "datasrc": ""
             },
+            "lengthChange":false,
+            "pageLength":7,
             drawCallback: function(){
                     var api =  $('#pendingOrderTable').DataTable();
                     var rows = api.rows({page: 'current'}).count();
-                    for(var i=0; i< 10 - rows; i++){
+                    for(var i=0; i< api.page.len() - rows; i++){
                         $('#pendingOrderTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td></tr>"));
                     }
                 }
@@ -38,6 +40,8 @@ $(document).ready( function () {
             {title:"Assigned Job"},
             {title:"Packing Station"}
           ],
+          "lengthChange":false,
+          "pageLength":7,
           "ajax":{
               "data": {"table_data_req":"available_emp"} ,
               "url": "/pick_pack_assignment",
@@ -47,7 +51,7 @@ $(document).ready( function () {
           drawCallback: function(){
                     var api =  $('#selectEmpTable').DataTable();
                     var rows = api.rows({page: 'current'}).count();
-                    for(var i=0; i< 10 - rows; i++){
+                    for(var i=0; i< api.page.len() - rows; i++){
                         $('#selectEmpTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
                     }
                 }

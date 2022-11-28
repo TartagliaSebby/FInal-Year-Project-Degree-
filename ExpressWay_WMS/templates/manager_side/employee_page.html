@@ -6,10 +6,18 @@
 <script>
 $(document).ready( function () {
         $('#employeeTable').DataTable({
-          data:{{employeeData|safe}}
+          data:{{employeeData|safe}},
+        "lengthChange":false,
+        "pageLength":8,
+        drawCallback: function(){
+                    var api =  $('#employeeTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i< api.page.len() - rows; i++){
+                        $('#employeeTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td></tr>"));
+                    }
         }
-        );
-         } );
+      });
+         });
 </script>
 {% endblock %}
 

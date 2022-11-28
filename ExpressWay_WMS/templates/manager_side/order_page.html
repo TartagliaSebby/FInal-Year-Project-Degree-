@@ -9,15 +9,25 @@
 
 $(document).ready( function () {
     var  orderTab = $('#orderTable').DataTable({
-            select: 'single',
-            data: {{orderTable_data|safe}},
-            columns: [
-                {title:'Order id'},
-                {title:'Customer Name'},
-                {title:'Num of items'},
-                {title:'status'},
-                {title:'Placed Date'},
-                ]
+          select: 'single',
+          data: {{orderTable_data|safe}},
+          columns: [
+              {title:'Order id'},
+              {title:'Customer Name'},
+              {title:'Num of items'},
+              {title:'status'},
+              {title:'Placed Date'},
+              ],
+            "lengthChange":false,
+            "pageLength":8,
+            //make sure task table displays at least a min number of rows
+            drawCallback: function(){
+                    var api =  $('#orderTable').DataTable();
+                    var rows = api.rows({page: 'current'}).count();
+                    for(var i=0; i<api.page.len() - rows; i++){
+                        $('#orderTable tbody').append($("<tr ><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>"));
+                    }
+                }                
         });
         $('#orderItemsTable').DataTable({
           columns: [
@@ -134,7 +144,7 @@ function closeOL(){
 {% endblock %}
 
 {% block externalContent%}
-<!--overlay for ASN-->
+<!--overlay-->
   <div id="overlayOrder" class="overlayContainer" style="z-index: 11;">
     <header class = "navbar navbar-light fixed-top overlayFixed" id="headerOrder" style="border-bottom:black solid 1px;box-shadow: 0 3px 3px -3px rgb(77, 77, 77);">
       <div class="container-fluid">
@@ -157,7 +167,7 @@ function closeOL(){
       <p style="margin-left:10px; font-size:1.5em; font-weight: 700; ">Items</p>
       <table id="orderItemsTable" class="display table"></table>
     </div>
-    
+
   </div>
 
 {% endblock %}

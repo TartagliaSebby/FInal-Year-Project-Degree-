@@ -15,7 +15,17 @@ $(document).ready( function () {
             {title:"Date"},
             {title:"Time"},
             {title:"Status"}
-          ]
+          ],
+          "lengthChange":false,
+          "pageLength":8,
+          //make sure task table displays at least a min number of rows
+          drawCallback: function(){
+                  var api =  $('#inShipmentTable').DataTable();
+                  var rows = api.rows({page: 'current'}).count();
+                  for(var i=0; i<api.page.len() - rows; i++){
+                      $('#inShipmentTable tbody').append($("<tr ><td>&nbsp;</td><td><td></td><td></td><td></td><td></td></tr>"));
+                  }
+              }      
         });
         $('#shippedTable').DataTable({"searching":false,
            "lengthChange": false,

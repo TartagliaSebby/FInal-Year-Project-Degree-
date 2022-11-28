@@ -97,6 +97,17 @@
             document.getElementById("overlayPickList").style.width ="0%";
             document.getElementById("headerPick").style.width ="0%";
         }
+        function completePicking(){
+            $.ajax({
+                url:"/picking",
+                data:{"complete_pick":"complete_pick"},
+                type:"post",
+                dataType:"json",
+                success: function(data){
+                    alert("submission successful")
+                }
+            });
+        }
     </script>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -130,8 +141,9 @@
                 </tbody>
             </table>
         </div>
-        <div class="d-flex justify-content-start" style="width: 95%;margin-left:auto; margin-right:auto;">
-            <button class="btn btn-secondary" style="background-color:rgb(29, 42, 49);" onclick="openPickListOl()">View Picking List</button>
+        <div class="d-flex justify-content-between mt-3" style="width: 95%;margin-left:auto; margin-right:auto;">
+            <button class="btn btn-secondary btn-lg" style="background-color:rgb(29, 42, 49);" onclick="openPickListOl()">View Picking List</button>
+            <button class="btn btn-success btn-lg"  onclick="completePicking()">complete picking</button>
         </div>
         
        
